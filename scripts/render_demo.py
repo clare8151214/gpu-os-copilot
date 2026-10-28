@@ -39,13 +39,16 @@ def main():
     for row in (transfer, compute):
         comparison = row["comparison"]
         change = comparison["median_throughput_change_fraction"]
+        repeat = json.loads(
+            (root / f"examples/timestamped-comparisons/{row['scenario']}.json").read_text()
+        )["comparison"]["median_throughput_change_fraction"]
         control_lines += [
             row["scenario"],
             f"  Profiled workload idle: {row['profiled_metrics']['gpu_idle_fraction']:.3%}",
             f"  Rules: {', '.join(row['rules'])}",
             f"  Meta: {row['meta']['decision']}; selected experiment: None",
             "  Agent abstained despite having permission to run the test.",
-            f"  Separate manual A/B (5 + 5): {change:+.3%}",
+            f"  Manual A/B (5 + 5 each): first {change:+.3%}, repeat {repeat:+.3%}",
             "  Overlapping timing ranges; no meaningful improvement established.",
             "",
         ]
@@ -90,14 +93,12 @@ def main():
         ),
         (
             25,
-            "4. Compare every trial",
+            "4. Check the effect again",
             "Only project-owned launch processes change CPU placement.",
-            "$ python scripts/replay_demo.py --section comparison\n\n"
-            + replay("comparison")
-            + "\n\n"
-            "Alternating A/B and B/A; same workload, seed, inputs and runtime.\n"
-            "Ranges overlap. This is one-host descriptive evidence.\n"
-            "It supports this placement intervention; it does not prove a sole scheduler cause.",
+            replay("comparison") + "\n\n"
+            "Same workload protocol; the repeat's much smaller effect limits the claim.\n"
+            "Ranges overlap. A large, stable speedup is not established.\n"
+            "These measurements do not prove a sole scheduler cause.",
         ),
         (
             25,
@@ -113,7 +114,7 @@ def main():
             "Timeouts, child cleanup, unique run IDs and retained failures.\n\n"
             "CPU scheduling alignment was unavailable on this host.\n"
             "No post-intervention GPU-idle trace was collected.\n"
-            "Five repetitions per condition; no cross-machine generalization.\n"
+            "Five repetitions per condition per batch; effect size varies between batches.\n"
             "Scenarios are labeled; this is not a blinded model evaluation.\n"
             "Rules identify similar symptoms; no AI superiority is claimed.\n"
             "Meta's demonstrated role: tool selection, execution and feedback interpretation.",

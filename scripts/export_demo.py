@@ -92,7 +92,8 @@ def export(root: Path, output: Path) -> None:
                 "experiment_origin": "meta_selected" if prefix == "cpu" else "manual_control",
                 "experiment_plan": experiment.plan,
                 "trials": [
-                    trial.model_dump(exclude={"configuration"}) for trial in experiment.trials
+                    trial.model_dump(mode="json", exclude={"configuration"})
+                    for trial in experiment.trials
                 ],
                 "comparison": comparison,
                 "trace_limitations": trace.provenance.limitations,

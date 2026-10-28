@@ -231,8 +231,29 @@ class BenchmarkTrial(Model):
     throughput_ops_s: float = Field(gt=0)
     cpu_set: list[NonNegativeInt]
     configuration: dict[str, Any]
+    started_at: datetime | None = Field(
+        default=None, description="Controller UTC time before child execution, including setup"
+    )
+    finished_at: datetime | None = Field(
+        default=None, description="Controller UTC time after child execution and cleanup"
+    )
     gpu_idle_fraction: None = None
     missing_data: list[str] = Field(default_factory=lambda: ["No profiler trace for timed trial"])
+
+    @model_validator(mode="after")
+    def valid_trial_times(self):
+        if (self.started_at is None) != (self.finished_at is None):
+            raise ValueError("Trial start and finish timestamps must be supplied together")
+        if self.started_at is not None:
+            if self.started_at.utcoffset() is None or self.finished_at.utcoffset() is None:
+                raise ValueError("Trial timestamps must have timezones")
+            if self.finished_at < self.started_at:
+                raise ValueError("Trial finish must not precede start")
+        else:
+            missing = "Trial start/end timestamps unavailable in this historical record"
+            if missing not in self.missing_data:
+                self.missing_data.append(missing)
+        return self
 
 
 class ExperimentResult(Envelope):

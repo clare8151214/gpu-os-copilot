@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from gpu_os_copilot.schemas import TraceBundle, TraceEvent
+from gpu_os_copilot.schemas import BenchmarkTrial, TraceBundle, TraceEvent
 
 
 @pytest.mark.parametrize(
@@ -59,3 +59,39 @@ def test_mixed_clocks_rejected(load_fixture):
     data["clock_aligned"] = False
     with pytest.raises(ValidationError, match="alignment"):
         TraceBundle.model_validate(data)
+
+
+@pytest.mark.parametrize(
+    "start,finish,valid",
+    [
+        (None, None, True),
+        ("2026-10-29T00:00:00Z", "2026-10-29T00:00:01Z", True),
+        ("2026-10-29T00:00:00Z", None, False),
+        (None, "2026-10-29T00:00:01Z", False),
+        ("2026-10-29T00:00:00", "2026-10-29T00:00:01Z", False),
+        ("2026-10-29T00:00:02Z", "2026-10-29T00:00:01Z", False),
+    ],
+)
+def test_trial_timestamps_and_legacy_records(start, finish, valid):
+    data = {
+        "run_id": "trial-test",
+        "condition": "baseline",
+        "wall_time_ms": 1,
+        "operation_count": 1,
+        "throughput_ops_s": 1000,
+        "cpu_set": [0],
+        "configuration": {},
+        "started_at": start,
+        "finished_at": finish,
+    }
+    if not valid:
+        with pytest.raises(ValidationError, match="Trial"):
+            BenchmarkTrial.model_validate(data)
+        return
+    trial = BenchmarkTrial.model_validate(data)
+    restored = BenchmarkTrial.model_validate_json(trial.model_dump_json())
+    assert restored == trial
+    missing = [item for item in trial.missing_data if "timestamps unavailable" in item]
+    assert len(missing) == (1 if start is None else 0)
+    if start is None:
+        assert restored.started_at is None and restored.finished_at is None

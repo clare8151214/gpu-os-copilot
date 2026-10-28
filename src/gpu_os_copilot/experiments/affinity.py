@@ -7,6 +7,7 @@ import subprocess
 import sys
 import tempfile
 import time
+from datetime import UTC, datetime
 from uuid import uuid4
 
 from gpu_os_copilot.experiments.compare import compare_trials
@@ -115,6 +116,7 @@ def run_affinity_ab(worker, request: ExperimentRequest) -> ExperimentResult:
                 if remaining <= 0:
                     raise TimeoutError("Total experiment timeout")
                 cpus = [baseline_cpu] if condition == "baseline" else request.candidate_cpu_set
+                started_at = datetime.now(UTC)
                 raw = _invoke(
                     [
                         sys.executable,
@@ -134,6 +136,7 @@ def run_affinity_ab(worker, request: ExperimentRequest) -> ExperimentResult:
                     timeout=min(remaining, 15),
                     max_output=request.max_output_bytes,
                 )
+                finished_at = datetime.now(UTC)
                 trial = BenchmarkTrial(
                     run_id=f"trial-{uuid4().hex}",
                     condition=condition,
@@ -142,6 +145,8 @@ def run_affinity_ab(worker, request: ExperimentRequest) -> ExperimentResult:
                     throughput_ops_s=raw["operation_count"] * 1000 / raw["wall_time_ms"],
                     cpu_set=cpus,
                     configuration={**raw["configuration"], "host": caps.model_dump()},
+                    started_at=started_at,
+                    finished_at=finished_at,
                 )
                 result.trials.append(trial)
                 result.provenance = Provenance(

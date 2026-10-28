@@ -1,0 +1,906 @@
+{
+  "schema_version": "1.0",
+  "experiment_id": "phase1-timestamped-transfer_bound",
+  "worker_id": "local",
+  "workload_id": "launch_test",
+  "created_at": "2026-10-28T16:51:39.074520Z",
+  "provenance": {
+    "source": "benchmark",
+    "confidence": "measured",
+    "description": "Synchronized, unprofiled CUDA timings from project subprocesses",
+    "limitations": []
+  },
+  "status": "ok",
+  "error_code": null,
+  "trials": [
+    {
+      "run_id": "trial-6f31631a19b64d11b25921b2a3410415",
+      "condition": "baseline",
+      "wall_time_ms": 521.421426,
+      "operation_count": 200,
+      "throughput_ops_s": 383.5669000682761,
+      "cpu_set": [
+        0
+      ],
+      "configuration": {
+        "scenario": "transfer_bound",
+        "workload_version": 2,
+        "seed": 42,
+        "shape": [
+          2048,
+          2048
+        ],
+        "dtype": "float32",
+        "warmup": 10,
+        "operations": 200,
+        "torch": "2.11.0+cu128",
+        "cuda": "12.8",
+        "gpu": "NVIDIA GeForce RTX 5060",
+        "synchronized": true,
+        "profiled": false,
+        "host": {
+          "schema_version": "1.0",
+          "worker_id": "local",
+          "os": "Linux 6.6.87.2-microsoft-standard-WSL2",
+          "python_version": "3.12.3",
+          "cpu_affinity": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27
+          ],
+          "gpu_count": 1,
+          "gpus": [
+            {
+              "model": "NVIDIA GeForce RTX 5060",
+              "driver": "610.88"
+            }
+          ],
+          "cuda_available": true,
+          "torch_version": "2.11.0+cu128",
+          "cuda_version": "12.8",
+          "nsys_version": "NVIDIA Nsight Systems version 2026.5.1.161-265138896106v0",
+          "cpu_scheduling_trace": "unverified",
+          "perf_event_paranoid": 2,
+          "limitations": [
+            "CPU scheduling capture permissions and time alignment unverified"
+          ]
+        }
+      },
+      "started_at": "2026-10-28T16:51:39.075000Z",
+      "finished_at": "2026-10-28T16:51:40.752425Z",
+      "gpu_idle_fraction": null,
+      "missing_data": [
+        "No profiler trace for timed trial"
+      ]
+    },
+    {
+      "run_id": "trial-188775c514ed4dab9ec15df0393583a2",
+      "condition": "treatment",
+      "wall_time_ms": 521.847028,
+      "operation_count": 200,
+      "throughput_ops_s": 383.2540749853614,
+      "cpu_set": [
+        1
+      ],
+      "configuration": {
+        "scenario": "transfer_bound",
+        "workload_version": 2,
+        "seed": 42,
+        "shape": [
+          2048,
+          2048
+        ],
+        "dtype": "float32",
+        "warmup": 10,
+        "operations": 200,
+        "torch": "2.11.0+cu128",
+        "cuda": "12.8",
+        "gpu": "NVIDIA GeForce RTX 5060",
+        "synchronized": true,
+        "profiled": false,
+        "host": {
+          "schema_version": "1.0",
+          "worker_id": "local",
+          "os": "Linux 6.6.87.2-microsoft-standard-WSL2",
+          "python_version": "3.12.3",
+          "cpu_affinity": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27
+          ],
+          "gpu_count": 1,
+          "gpus": [
+            {
+              "model": "NVIDIA GeForce RTX 5060",
+              "driver": "610.88"
+            }
+          ],
+          "cuda_available": true,
+          "torch_version": "2.11.0+cu128",
+          "cuda_version": "12.8",
+          "nsys_version": "NVIDIA Nsight Systems version 2026.5.1.161-265138896106v0",
+          "cpu_scheduling_trace": "unverified",
+          "perf_event_paranoid": 2,
+          "limitations": [
+            "CPU scheduling capture permissions and time alignment unverified"
+          ]
+        }
+      },
+      "started_at": "2026-10-28T16:51:40.752762Z",
+      "finished_at": "2026-10-28T16:51:42.372762Z",
+      "gpu_idle_fraction": null,
+      "missing_data": [
+        "No profiler trace for timed trial"
+      ]
+    },
+    {
+      "run_id": "trial-07eb5403f13a4e7cb3bc4c8f048071e7",
+      "condition": "treatment",
+      "wall_time_ms": 522.04298,
+      "operation_count": 200,
+      "throughput_ops_s": 383.11021824295005,
+      "cpu_set": [
+        1
+      ],
+      "configuration": {
+        "scenario": "transfer_bound",
+        "workload_version": 2,
+        "seed": 42,
+        "shape": [
+          2048,
+          2048
+        ],
+        "dtype": "float32",
+        "warmup": 10,
+        "operations": 200,
+        "torch": "2.11.0+cu128",
+        "cuda": "12.8",
+        "gpu": "NVIDIA GeForce RTX 5060",
+        "synchronized": true,
+        "profiled": false,
+        "host": {
+          "schema_version": "1.0",
+          "worker_id": "local",
+          "os": "Linux 6.6.87.2-microsoft-standard-WSL2",
+          "python_version": "3.12.3",
+          "cpu_affinity": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27
+          ],
+          "gpu_count": 1,
+          "gpus": [
+            {
+              "model": "NVIDIA GeForce RTX 5060",
+              "driver": "610.88"
+            }
+          ],
+          "cuda_available": true,
+          "torch_version": "2.11.0+cu128",
+          "cuda_version": "12.8",
+          "nsys_version": "NVIDIA Nsight Systems version 2026.5.1.161-265138896106v0",
+          "cpu_scheduling_trace": "unverified",
+          "perf_event_paranoid": 2,
+          "limitations": [
+            "CPU scheduling capture permissions and time alignment unverified"
+          ]
+        }
+      },
+      "started_at": "2026-10-28T16:51:42.373092Z",
+      "finished_at": "2026-10-28T16:51:44.006429Z",
+      "gpu_idle_fraction": null,
+      "missing_data": [
+        "No profiler trace for timed trial"
+      ]
+    },
+    {
+      "run_id": "trial-f8863c750f7a45aab498dc0f38d1d4dd",
+      "condition": "baseline",
+      "wall_time_ms": 523.152612,
+      "operation_count": 200,
+      "throughput_ops_s": 382.2976229353128,
+      "cpu_set": [
+        0
+      ],
+      "configuration": {
+        "scenario": "transfer_bound",
+        "workload_version": 2,
+        "seed": 42,
+        "shape": [
+          2048,
+          2048
+        ],
+        "dtype": "float32",
+        "warmup": 10,
+        "operations": 200,
+        "torch": "2.11.0+cu128",
+        "cuda": "12.8",
+        "gpu": "NVIDIA GeForce RTX 5060",
+        "synchronized": true,
+        "profiled": false,
+        "host": {
+          "schema_version": "1.0",
+          "worker_id": "local",
+          "os": "Linux 6.6.87.2-microsoft-standard-WSL2",
+          "python_version": "3.12.3",
+          "cpu_affinity": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27
+          ],
+          "gpu_count": 1,
+          "gpus": [
+            {
+              "model": "NVIDIA GeForce RTX 5060",
+              "driver": "610.88"
+            }
+          ],
+          "cuda_available": true,
+          "torch_version": "2.11.0+cu128",
+          "cuda_version": "12.8",
+          "nsys_version": "NVIDIA Nsight Systems version 2026.5.1.161-265138896106v0",
+          "cpu_scheduling_trace": "unverified",
+          "perf_event_paranoid": 2,
+          "limitations": [
+            "CPU scheduling capture permissions and time alignment unverified"
+          ]
+        }
+      },
+      "started_at": "2026-10-28T16:51:44.006784Z",
+      "finished_at": "2026-10-28T16:51:45.683800Z",
+      "gpu_idle_fraction": null,
+      "missing_data": [
+        "No profiler trace for timed trial"
+      ]
+    },
+    {
+      "run_id": "trial-aba675f7aaf64ba4bbae2ca5f90e2c14",
+      "condition": "baseline",
+      "wall_time_ms": 525.416639,
+      "operation_count": 200,
+      "throughput_ops_s": 380.65029760125276,
+      "cpu_set": [
+        0
+      ],
+      "configuration": {
+        "scenario": "transfer_bound",
+        "workload_version": 2,
+        "seed": 42,
+        "shape": [
+          2048,
+          2048
+        ],
+        "dtype": "float32",
+        "warmup": 10,
+        "operations": 200,
+        "torch": "2.11.0+cu128",
+        "cuda": "12.8",
+        "gpu": "NVIDIA GeForce RTX 5060",
+        "synchronized": true,
+        "profiled": false,
+        "host": {
+          "schema_version": "1.0",
+          "worker_id": "local",
+          "os": "Linux 6.6.87.2-microsoft-standard-WSL2",
+          "python_version": "3.12.3",
+          "cpu_affinity": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27
+          ],
+          "gpu_count": 1,
+          "gpus": [
+            {
+              "model": "NVIDIA GeForce RTX 5060",
+              "driver": "610.88"
+            }
+          ],
+          "cuda_available": true,
+          "torch_version": "2.11.0+cu128",
+          "cuda_version": "12.8",
+          "nsys_version": "NVIDIA Nsight Systems version 2026.5.1.161-265138896106v0",
+          "cpu_scheduling_trace": "unverified",
+          "perf_event_paranoid": 2,
+          "limitations": [
+            "CPU scheduling capture permissions and time alignment unverified"
+          ]
+        }
+      },
+      "started_at": "2026-10-28T16:51:45.684167Z",
+      "finished_at": "2026-10-28T16:51:47.427865Z",
+      "gpu_idle_fraction": null,
+      "missing_data": [
+        "No profiler trace for timed trial"
+      ]
+    },
+    {
+      "run_id": "trial-9194d79627b74e92b672cb2150433ba7",
+      "condition": "treatment",
+      "wall_time_ms": 526.049682,
+      "operation_count": 200,
+      "throughput_ops_s": 380.19222678667074,
+      "cpu_set": [
+        1
+      ],
+      "configuration": {
+        "scenario": "transfer_bound",
+        "workload_version": 2,
+        "seed": 42,
+        "shape": [
+          2048,
+          2048
+        ],
+        "dtype": "float32",
+        "warmup": 10,
+        "operations": 200,
+        "torch": "2.11.0+cu128",
+        "cuda": "12.8",
+        "gpu": "NVIDIA GeForce RTX 5060",
+        "synchronized": true,
+        "profiled": false,
+        "host": {
+          "schema_version": "1.0",
+          "worker_id": "local",
+          "os": "Linux 6.6.87.2-microsoft-standard-WSL2",
+          "python_version": "3.12.3",
+          "cpu_affinity": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27
+          ],
+          "gpu_count": 1,
+          "gpus": [
+            {
+              "model": "NVIDIA GeForce RTX 5060",
+              "driver": "610.88"
+            }
+          ],
+          "cuda_available": true,
+          "torch_version": "2.11.0+cu128",
+          "cuda_version": "12.8",
+          "nsys_version": "NVIDIA Nsight Systems version 2026.5.1.161-265138896106v0",
+          "cpu_scheduling_trace": "unverified",
+          "perf_event_paranoid": 2,
+          "limitations": [
+            "CPU scheduling capture permissions and time alignment unverified"
+          ]
+        }
+      },
+      "started_at": "2026-10-28T16:51:47.428274Z",
+      "finished_at": "2026-10-28T16:51:49.122404Z",
+      "gpu_idle_fraction": null,
+      "missing_data": [
+        "No profiler trace for timed trial"
+      ]
+    },
+    {
+      "run_id": "trial-f871183d95cc43a48b9fc9d06e7d0ab9",
+      "condition": "treatment",
+      "wall_time_ms": 526.526721,
+      "operation_count": 200,
+      "throughput_ops_s": 379.84776844782397,
+      "cpu_set": [
+        1
+      ],
+      "configuration": {
+        "scenario": "transfer_bound",
+        "workload_version": 2,
+        "seed": 42,
+        "shape": [
+          2048,
+          2048
+        ],
+        "dtype": "float32",
+        "warmup": 10,
+        "operations": 200,
+        "torch": "2.11.0+cu128",
+        "cuda": "12.8",
+        "gpu": "NVIDIA GeForce RTX 5060",
+        "synchronized": true,
+        "profiled": false,
+        "host": {
+          "schema_version": "1.0",
+          "worker_id": "local",
+          "os": "Linux 6.6.87.2-microsoft-standard-WSL2",
+          "python_version": "3.12.3",
+          "cpu_affinity": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27
+          ],
+          "gpu_count": 1,
+          "gpus": [
+            {
+              "model": "NVIDIA GeForce RTX 5060",
+              "driver": "610.88"
+            }
+          ],
+          "cuda_available": true,
+          "torch_version": "2.11.0+cu128",
+          "cuda_version": "12.8",
+          "nsys_version": "NVIDIA Nsight Systems version 2026.5.1.161-265138896106v0",
+          "cpu_scheduling_trace": "unverified",
+          "perf_event_paranoid": 2,
+          "limitations": [
+            "CPU scheduling capture permissions and time alignment unverified"
+          ]
+        }
+      },
+      "started_at": "2026-10-28T16:51:49.122781Z",
+      "finished_at": "2026-10-28T16:51:50.864197Z",
+      "gpu_idle_fraction": null,
+      "missing_data": [
+        "No profiler trace for timed trial"
+      ]
+    },
+    {
+      "run_id": "trial-8011e2d3e5d24631a996c72c9ca4e74e",
+      "condition": "baseline",
+      "wall_time_ms": 521.139558,
+      "operation_count": 200,
+      "throughput_ops_s": 383.7743593434909,
+      "cpu_set": [
+        0
+      ],
+      "configuration": {
+        "scenario": "transfer_bound",
+        "workload_version": 2,
+        "seed": 42,
+        "shape": [
+          2048,
+          2048
+        ],
+        "dtype": "float32",
+        "warmup": 10,
+        "operations": 200,
+        "torch": "2.11.0+cu128",
+        "cuda": "12.8",
+        "gpu": "NVIDIA GeForce RTX 5060",
+        "synchronized": true,
+        "profiled": false,
+        "host": {
+          "schema_version": "1.0",
+          "worker_id": "local",
+          "os": "Linux 6.6.87.2-microsoft-standard-WSL2",
+          "python_version": "3.12.3",
+          "cpu_affinity": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27
+          ],
+          "gpu_count": 1,
+          "gpus": [
+            {
+              "model": "NVIDIA GeForce RTX 5060",
+              "driver": "610.88"
+            }
+          ],
+          "cuda_available": true,
+          "torch_version": "2.11.0+cu128",
+          "cuda_version": "12.8",
+          "nsys_version": "NVIDIA Nsight Systems version 2026.5.1.161-265138896106v0",
+          "cpu_scheduling_trace": "unverified",
+          "perf_event_paranoid": 2,
+          "limitations": [
+            "CPU scheduling capture permissions and time alignment unverified"
+          ]
+        }
+      },
+      "started_at": "2026-10-28T16:51:50.864572Z",
+      "finished_at": "2026-10-28T16:51:52.595021Z",
+      "gpu_idle_fraction": null,
+      "missing_data": [
+        "No profiler trace for timed trial"
+      ]
+    },
+    {
+      "run_id": "trial-61a4b291f53e4bdfa21d50d4d5816530",
+      "condition": "baseline",
+      "wall_time_ms": 516.711691,
+      "operation_count": 200,
+      "throughput_ops_s": 387.06304402158383,
+      "cpu_set": [
+        0
+      ],
+      "configuration": {
+        "scenario": "transfer_bound",
+        "workload_version": 2,
+        "seed": 42,
+        "shape": [
+          2048,
+          2048
+        ],
+        "dtype": "float32",
+        "warmup": 10,
+        "operations": 200,
+        "torch": "2.11.0+cu128",
+        "cuda": "12.8",
+        "gpu": "NVIDIA GeForce RTX 5060",
+        "synchronized": true,
+        "profiled": false,
+        "host": {
+          "schema_version": "1.0",
+          "worker_id": "local",
+          "os": "Linux 6.6.87.2-microsoft-standard-WSL2",
+          "python_version": "3.12.3",
+          "cpu_affinity": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27
+          ],
+          "gpu_count": 1,
+          "gpus": [
+            {
+              "model": "NVIDIA GeForce RTX 5060",
+              "driver": "610.88"
+            }
+          ],
+          "cuda_available": true,
+          "torch_version": "2.11.0+cu128",
+          "cuda_version": "12.8",
+          "nsys_version": "NVIDIA Nsight Systems version 2026.5.1.161-265138896106v0",
+          "cpu_scheduling_trace": "unverified",
+          "perf_event_paranoid": 2,
+          "limitations": [
+            "CPU scheduling capture permissions and time alignment unverified"
+          ]
+        }
+      },
+      "started_at": "2026-10-28T16:51:52.595420Z",
+      "finished_at": "2026-10-28T16:51:54.251944Z",
+      "gpu_idle_fraction": null,
+      "missing_data": [
+        "No profiler trace for timed trial"
+      ]
+    },
+    {
+      "run_id": "trial-49af46eabf3a44fab4a54737175d7959",
+      "condition": "treatment",
+      "wall_time_ms": 515.991445,
+      "operation_count": 200,
+      "throughput_ops_s": 387.6033254776152,
+      "cpu_set": [
+        1
+      ],
+      "configuration": {
+        "scenario": "transfer_bound",
+        "workload_version": 2,
+        "seed": 42,
+        "shape": [
+          2048,
+          2048
+        ],
+        "dtype": "float32",
+        "warmup": 10,
+        "operations": 200,
+        "torch": "2.11.0+cu128",
+        "cuda": "12.8",
+        "gpu": "NVIDIA GeForce RTX 5060",
+        "synchronized": true,
+        "profiled": false,
+        "host": {
+          "schema_version": "1.0",
+          "worker_id": "local",
+          "os": "Linux 6.6.87.2-microsoft-standard-WSL2",
+          "python_version": "3.12.3",
+          "cpu_affinity": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27
+          ],
+          "gpu_count": 1,
+          "gpus": [
+            {
+              "model": "NVIDIA GeForce RTX 5060",
+              "driver": "610.88"
+            }
+          ],
+          "cuda_available": true,
+          "torch_version": "2.11.0+cu128",
+          "cuda_version": "12.8",
+          "nsys_version": "NVIDIA Nsight Systems version 2026.5.1.161-265138896106v0",
+          "cpu_scheduling_trace": "unverified",
+          "perf_event_paranoid": 2,
+          "limitations": [
+            "CPU scheduling capture permissions and time alignment unverified"
+          ]
+        }
+      },
+      "started_at": "2026-10-28T16:51:54.252414Z",
+      "finished_at": "2026-10-28T16:51:55.825367Z",
+      "gpu_idle_fraction": null,
+      "missing_data": [
+        "No profiler trace for timed trial"
+      ]
+    }
+  ],
+  "comparison": {
+    "status": "ok",
+    "baseline": {
+      "n": 5,
+      "median_wall_time_ms": 521.421426,
+      "min_wall_time_ms": 516.711691,
+      "max_wall_time_ms": 525.416639,
+      "stddev_wall_time_ms": 2.8674657866935838,
+      "median_throughput_ops_s": 383.5669000682761
+    },
+    "treatment": {
+      "n": 5,
+      "median_wall_time_ms": 522.04298,
+      "min_wall_time_ms": 515.991445,
+      "max_wall_time_ms": 526.526721,
+      "stddev_wall_time_ms": 3.789746613978992,
+      "median_throughput_ops_s": 383.11021824295005
+    },
+    "median_throughput_change_fraction": -0.0011906184429488764,
+    "interpretation": "Descriptive repeated comparison; not proof of a sole cause.",
+    "missing_data": [
+      "Timed trials have no GPU idle or CPU scheduling trace"
+    ]
+  },
+  "plan": {
+    "scenario": "transfer_bound",
+    "baseline_cpu_set": [
+      0
+    ],
+    "treatment_cpu_set": [
+      1
+    ],
+    "contender_cpu": 0,
+    "repeats": 5,
+    "timeout_s": 60,
+    "max_cpu_cores": 2,
+    "gpu_allocator_budget_mb": 256,
+    "limits": "GPU budget excludes CUDA context; fixed small tensors, no global tuning"
+  }
+}

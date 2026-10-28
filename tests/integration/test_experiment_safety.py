@@ -1,6 +1,7 @@
 import json
 import subprocess
 import sys
+from datetime import UTC, datetime
 
 import pytest
 
@@ -85,9 +86,11 @@ def test_alternating_trials_persistence_and_duplicate_refusal(setup, monkeypatch
     worker, request = setup
     request.owner_approved = True
     calls = []
+    child_intervals = []
 
     def simulated(argv, timeout, max_output):
         calls.append(argv)
+        child_intervals.append((datetime.now(UTC), datetime.now(UTC)))
         return {"wall_time_ms": 10, "operation_count": 200, "configuration": {"test": True}}
 
     monkeypatch.setattr("gpu_os_copilot.experiments.affinity._invoke", simulated)
@@ -100,9 +103,17 @@ def test_alternating_trials_persistence_and_duplicate_refusal(setup, monkeypatch
     ]
     assert result.status == "ok"
     assert len(calls) == 4
+    for trial, (child_start, child_finish) in zip(result.trials, child_intervals, strict=True):
+        assert trial.started_at <= child_start <= child_finish <= trial.finished_at
+    assert all(
+        first.finished_at <= second.started_at
+        for first, second in zip(result.trials, result.trials[1:], strict=False)
+    )
     assert all(argv[1:3] == ["-m", "gpu_os_copilot.workloads.launch_test"] for argv in calls)
     stored = json.loads((worker.artifact_dir / "experiments/test/result.json").read_text())
     assert stored["comparison"]["baseline"]["n"] == 2
+    assert all(trial["started_at"].endswith("Z") for trial in stored["trials"])
+    assert all(trial["finished_at"].endswith("Z") for trial in stored["trials"])
     assert worker.run_experiment(request).status == "duplicate"
 
 

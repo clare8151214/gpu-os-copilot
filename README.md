@@ -57,6 +57,7 @@ gpu-os-copilot diagnose --trace examples/measured-traces/cpu_contention.json --m
 The replay shows saved timings and real Meta tool choices. It makes no new GPU or API requests.
 These samples describe one recorded environment; use your own captures to investigate your
 application. Profiled trace metrics and unprofiled timing trials are shown separately.
+The replay also shows a later manual repeat, so changes between batches remain visible.
 
 To explore the agent workflow offline:
 
@@ -197,6 +198,11 @@ uses the first available CPU alongside a controlled contender; treatment moves t
 to the second CPU, or to the CPUs supplied with `--cpus`. Choose 2–5 repetitions per condition.
 Results include individual trials and aggregate timing/throughput comparisons, saved under
 `artifacts/experiments/`.
+
+Each new trial records UTC `started_at` and `finished_at` times around child execution and
+cleanup. These include setup and warm-up; `wall_time_ms` measures only the synchronized
+benchmark region. Historical records without trial timestamps remain readable and are labeled
+as missing that metadata.
 
 Add `--scenario transfer_bound` or `--scenario compute_bound` to compare placement for a
 control workload. Each condition uses the same scenario, seed and operation count; only

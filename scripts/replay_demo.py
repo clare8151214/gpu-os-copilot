@@ -51,6 +51,21 @@ def main():
                 )
             change = comparison["median_throughput_change_fraction"]
             print(f"  Median throughput change: {change:+.3%} (descriptive)")
+            repeat_path = args.data.parent / "timestamped-comparisons" / f"{row['scenario']}.json"
+            if repeat_path.is_file():
+                repeat = json.loads(repeat_path.read_text())["comparison"]
+                print("  Later manual repeat (UTC trial timestamps recorded):")
+                for condition in ("baseline", "treatment"):
+                    stats = repeat[condition]
+                    print(
+                        f"    {condition:9} n={stats['n']} "
+                        f"median={stats['median_wall_time_ms']:.6f} ms "
+                        f"range={stats['min_wall_time_ms']:.6f}-{stats['max_wall_time_ms']:.6f}"
+                    )
+                print(
+                    "  Repeat median throughput change: "
+                    f"{repeat['median_throughput_change_fraction']:+.3%} (descriptive)"
+                )
         print()
     if args.section in {"all", "limits"}:
         for limitation in data["limitations"]:
