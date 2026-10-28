@@ -1,0 +1,1 @@
+"""Native local worker boundary."""

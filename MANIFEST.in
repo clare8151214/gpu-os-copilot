@@ -1,0 +1,5 @@
+global-exclude *.md
+include README.md Jenkinsfile requirements-dev.lock .env.example
+recursive-include scripts *.py
+recursive-include tests *.py
+recursive-include examples *.json

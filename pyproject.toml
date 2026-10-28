@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools==84.2.1"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gpu-os-copilot"
+version = "0.1.0"
+description = "Evidence-grounded CPU/GPU performance experiments with a bounded Meta agent"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = ["pydantic>=2.12,<3"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.4,<10", "ruff>=0.14,<1", "build>=1.3,<2", "openai>=2,<3"]
+meta = ["openai>=2,<3"]
+gpu = ["torch>=2.8,<3"]
+
+[project.scripts]
+gpu-os-copilot = "gpu_os_copilot.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+gpu_os_copilot = ["fixtures/*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests/unit", "tests/integration"]
+addopts = "--strict-markers"
+markers = ["gpu: explicitly opted-in hardware tests"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+extend-exclude = ["AGENTS.md", "CLAUDE.md"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]

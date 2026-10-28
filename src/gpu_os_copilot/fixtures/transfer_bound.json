@@ -1,0 +1,73 @@
+{
+  "schema_version": "1.0",
+  "experiment_id": "fixture-transfer_bound",
+  "worker_id": "local",
+  "workload_id": "transfer_bound",
+  "created_at": "2026-10-28T00:00:00+00:00",
+  "run_id": "transfer_bound",
+  "provenance": {
+    "source": "fixture",
+    "confidence": "simulated",
+    "description": "Fabricated software-test fixture; not a GPU measurement or speedup.",
+    "limitations": [
+      "Synthetic evidence cannot substantiate hardware performance."
+    ]
+  },
+  "timebase": "synthetic_monotonic_ns",
+  "clock_aligned": true,
+  "window": {
+    "start_ns": 0,
+    "end_ns": 10000000,
+    "device_id": 0
+  },
+  "trace_completeness": "complete",
+  "events": [
+    {
+      "id": "transfer_bound-1",
+      "source": "fixture",
+      "kind": "cuda_api",
+      "start_ns": 0,
+      "end_ns": 100000,
+      "confidence": "simulated",
+      "pid": 100,
+      "tid": 101,
+      "device_id": null,
+      "stream_id": null,
+      "correlation_id": 1
+    },
+    {
+      "id": "transfer_bound-2",
+      "source": "fixture",
+      "kind": "memcpy",
+      "start_ns": 100000,
+      "end_ns": 8100000,
+      "confidence": "simulated",
+      "pid": 100,
+      "tid": 101,
+      "device_id": 0,
+      "stream_id": 0,
+      "correlation_id": 1,
+      "attributes": {
+        "direction": "H2D"
+      }
+    },
+    {
+      "id": "transfer_bound-3",
+      "source": "fixture",
+      "kind": "gpu_kernel",
+      "start_ns": 8100000,
+      "end_ns": 9500000,
+      "confidence": "simulated",
+      "pid": 100,
+      "tid": 101,
+      "device_id": 0,
+      "stream_id": 0
+    }
+  ],
+  "wall_time_ms": 10.0,
+  "operation_count": 20,
+  "configuration": {
+    "seed": 42,
+    "fixture_scenario": "transfer_bound"
+  }
+}
