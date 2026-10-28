@@ -22,6 +22,14 @@ test-results/
 *.pem
 *.key
 
+# Keep videos local, including files outside artifacts/.
+*.[mM][pP]4
+*.[mM][oO][vV]
+*.[wW][eE][bB][mM]
+*.[mM][kK][vV]
+*.[aA][vV][iI]
+*.[mM]4[vV]
+
 # Keep documentation local, except the root README.
 /docs/
 *.md
