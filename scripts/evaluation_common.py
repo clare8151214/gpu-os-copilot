@@ -4,8 +4,9 @@ import copy
 import hashlib
 import json
 import time
+from pathlib import Path
 
-from gpu_os_copilot.agent.tools import EmptyArgs, SummaryArgs, TimelineArgs
+from gpu_os_copilot.agent.tools import EmptyArgs, SummaryArgs, TimelineArgs, ToolExecutor
 from gpu_os_copilot.config import CopilotError
 from gpu_os_copilot.experiments.compare import compare_trials
 from gpu_os_copilot.schemas import ExperimentResult, MetricSummary, TraceBundle
@@ -29,15 +30,46 @@ LIMITS = {
 }
 
 
+class NoWorker:
+    def capabilities(self):
+        raise AssertionError("Recorded evaluation cannot inspect hardware")
+
+    def run_experiment(self, request):
+        raise AssertionError("Recorded evaluation cannot execute hardware")
+
+
 class ReplayExecutor:
     owner_approved = False
 
-    def __init__(self, case):
+    def __init__(self, case, *, case_directory=None):
         self.trace = TraceBundle.model_validate(case["trace"])
         self.results = [ExperimentResult.model_validate(result) for result in case["batches"]]
         self.opening = copy.deepcopy(case["opening"])
         self.prior_decision = self.opening.get("prior_decision")
         self.reads = []
+        self.scheduler = None
+        self.scheduler_reads = []
+        self.runtime_evidence = case.get("runtime_evidence", False)
+        if type(self.runtime_evidence) is not bool:
+            raise ValueError("Invalid runtime evidence policy")
+        if "scheduler_manifest" in case:
+            # Imports stay optional so historical snapshots without this tool still run.
+            from gpu_os_copilot.analysis.scheduling_study import load_scheduling_study
+
+            if not self.runtime_evidence or case_directory is None:
+                raise ValueError(
+                    "Scheduling replay requires a frozen directory and runtime evidence"
+                )
+            base = Path(case_directory).resolve(strict=True)
+            name = Path(case["scheduler_manifest"])
+            path = (base / name).resolve(strict=True)
+            if name.is_absolute() or ".." in name.parts or not path.is_relative_to(base):
+                raise ValueError("Scheduling manifest outside frozen case directory")
+            # Only the public case identity was anonymized; retain workload binding internally.
+            reference = self.trace.model_copy(update={"workload_id": "launch_test"})
+            self.scheduler = ToolExecutor(
+                NoWorker(), reference, scheduling_study=load_scheduling_study(path, reference)
+            )
         if not 2 <= len(self.results) <= 3:
             raise ValueError("Two or three recorded batches required")
         if len({r.experiment_id for r in self.results}) != len(self.results):
@@ -66,7 +98,30 @@ class ReplayExecutor:
                 raise ValueError("Recorded workload does not match trace")
 
     def evidence(self):
-        return copy.deepcopy(self.opening)
+        result = copy.deepcopy(self.opening)
+        if self.runtime_evidence:
+            from gpu_os_copilot.agent.investigator import evidence_catalog
+            from gpu_os_copilot.analysis.metrics import summarize
+
+            summary = summarize(self.trace).model_dump(mode="json")
+            for name in result["summary"].keys() & summary.keys():
+                result["summary"][name] = summary[name]
+            result["summary"]["missing_metrics"] = [
+                name for name, value in result["summary"].items() if value is None
+            ]
+            catalog = evidence_catalog(self.trace)
+            catalog["metrics"].update(self.additional_metrics())
+            catalog["missing_metric_refs"] = [
+                name for name, metric in catalog["metrics"].items() if not metric["available"]
+            ]
+            result["evidence_catalog"] = catalog
+        return result
+
+    def additional_metrics(self):
+        return self.scheduler.additional_metrics() if self.scheduler else {}
+
+    def scheduling_evidence(self):
+        return self.scheduler.scheduling_evidence() if self.scheduler else None
 
     def summary_for_rules(self):
         """Feed unchanged historical rules the same screened metrics given to both models."""
@@ -82,11 +137,11 @@ class ReplayExecutor:
         )
         values = {
             name: copy.deepcopy(value)
-            for name, value in self.opening["summary"].items()
+            for name, value in self.evidence()["summary"].items()
             if name in MetricSummary.model_fields
         }
         # Missing metric names are safe, anonymous facts, unlike raw provenance notes.
-        values["missing_data"] = list(self.opening["summary"]["missing_metrics"])
+        values["missing_data"] = list(self.evidence()["summary"]["missing_metrics"])
         return MetricSummary(**metadata, **values)
 
     def tool_schemas(self):
@@ -113,7 +168,7 @@ class ReplayExecutor:
                 "Reveal all later recorded batches to reassess reproducibility.",
             ),
         ]
-        return [
+        schemas = [
             {
                 "type": "function",
                 "function": {
@@ -124,8 +179,22 @@ class ReplayExecutor:
             }
             for name, args, description in declarations
         ]
+        if self.scheduler:
+            from gpu_os_copilot.analysis.scheduling_study import READ_TOOL
+
+            schemas += [
+                tool
+                for tool in self.scheduler.tool_schemas()
+                if tool["function"]["name"] == READ_TOOL
+            ]
+        return schemas
 
     def execute(self, name, arguments):
+        if self.scheduler and name == "read_profiled_scheduler_comparisons":
+            response = self.scheduler.execute(name, arguments)
+            if "result" in response:
+                self.scheduler_reads.append(name)
+            return response
         try:
             if len(arguments) > 8192:
                 raise ValueError("Arguments too large")
@@ -136,7 +205,7 @@ class ReplayExecutor:
                 if args.run_id != self.trace.run_id:
                     raise ValueError("Unknown run")
                 if name == "get_performance_summary":
-                    value = copy.deepcopy(self.opening["summary"])
+                    value = self.evidence()["summary"]
                 else:
                     w = self.trace.window
                     events = sorted(

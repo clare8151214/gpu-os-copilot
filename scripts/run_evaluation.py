@@ -106,6 +106,7 @@ def aggregate(rows):
 
 
 def validate_suite(suite):
+    suite = suite.resolve(strict=True)
     if (suite / "invalidated.json").exists():
         raise ValueError("Evaluation plan invalidated by a subsequent evidence audit")
     plan = json.loads((suite / "plan.json").read_text())
@@ -121,7 +122,27 @@ def validate_suite(suite):
     for case in plan["cases"]:
         if sha(suite / case["path"]) != case["sha256"]:
             raise ValueError("Frozen case changed")
+    for name, expected in plan.get("scheduler_data_sha256", {}).items():
+        relative = Path(name)
+        path = (suite / relative).resolve(strict=True)
+        if relative.is_absolute() or ".." in relative.parts or not path.is_relative_to(suite):
+            raise ValueError("Scheduling input outside frozen suite")
+        if sha(path) != expected:
+            raise ValueError("Frozen scheduling input changed")
     return plan
+
+
+def validate_result_inputs(result, key, source_method):
+    expected = (
+        key["opening_sha256_by_method"][source_method]
+        if "opening_sha256_by_method" in key
+        else key["opening_sha256"]
+    )
+    if (
+        result["opening_sha256"] != expected
+        or result["common_tools_sha256"] != key["common_tools_sha256"]
+    ):
+        raise ValueError("Method did not receive its frozen evidence/tools")
 
 
 def main():
@@ -198,12 +219,7 @@ def main():
                     }
                 else:
                     result = json.loads((destination / "result.json").read_text())
-                    if (
-                        result["opening_sha256"] != keys[case["case_id"]]["opening_sha256"]
-                        or result["common_tools_sha256"]
-                        != keys[case["case_id"]]["common_tools_sha256"]
-                    ):
-                        raise ValueError("Methods did not receive identical evidence/tools")
+                    validate_result_inputs(result, keys[case["case_id"]], source_method)
             except subprocess.TimeoutExpired:
                 result = {
                     "method": method,

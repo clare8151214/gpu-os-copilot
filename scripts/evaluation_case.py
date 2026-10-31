@@ -28,6 +28,10 @@ class OfflineClient:
             if self.turn == 1
             else ["inspect_timeline"]
         )
+        if self.turn == 1 and any(
+            tool["function"]["name"] == "read_profiled_scheduler_comparisons" for tool in tools
+        ):
+            names.append("read_profiled_scheduler_comparisons")
         if tools and self.turn <= 2:
             return {
                 "message": {
@@ -79,11 +83,12 @@ class OfflineClient:
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--case", type=Path, required=True)
-    parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument("--out", type=Path)
     parser.add_argument("--method", choices=["rules", "legacy", "enhanced"], required=True)
     parser.add_argument("--runner-sha256", required=True)
     parser.add_argument("--offline", action="store_true")
     parser.add_argument("--allow-paid-api", action="store_true")
+    parser.add_argument("--inspect-input", action="store_true", help="Offline input hashes only")
     args = parser.parse_args()
     if args.offline:
 
@@ -93,13 +98,27 @@ def main():
         socket.socket.connect = reject_network
     if args.offline and args.allow_paid_api:
         parser.error("Offline and paid modes are mutually exclusive")
+    if args.inspect_input and not args.offline:
+        parser.error("Input inspection requires --offline")
     if args.method != "rules" and not args.offline and not args.allow_paid_api:
         parser.error("Explicit API opt-in required")
     runner_path = Path(run_agent.__code__.co_filename).resolve()
     if hashlib.sha256(runner_path.read_bytes()).hexdigest() != args.runner_sha256:
         raise ValueError("Agent runner does not match frozen source")
     case = json.loads(args.case.read_text())
-    ex = ReplayExecutor(case)
+    ex = ReplayExecutor(case, case_directory=args.case.parent)
+    if args.inspect_input:
+        print(
+            json.dumps(
+                {
+                    "opening_sha256": digest(ex.evidence()),
+                    "common_tools_sha256": digest(ex.tool_schemas()),
+                }
+            )
+        )
+        return 0
+    if args.out is None:
+        parser.error("Execution requires --out")
     args.out.mkdir(parents=True, exist_ok=False, mode=0o700)
     result = {
         "method": args.method,
@@ -121,6 +140,8 @@ def main():
         if selects:
             ex.execute("read_recorded_comparison", "{}")
             ex.execute("read_repeated_comparisons", "{}")
+            if ex.scheduler is not None:
+                ex.execute("read_profiled_scheduler_comparisons", "{}")
         result["agent"] = {
             "mode": "rules",
             "decision": {
@@ -129,6 +150,12 @@ def main():
                 "selected_experiment": {"name": "affinity_ab"} if selects else None,
             },
         }
+        if ex.scheduler is not None:
+            result["agent"]["scheduling_evidence"] = ex.scheduling_evidence()
+            result["rules_extension"] = (
+                "Historical symptom rule plus one recorded scheduling read on affinity selection; "
+                "deterministic study assessment is reported without a causal interpretation."
+            )
         result["usage"] = {
             "requests": 0,
             "reported_total_tokens": 0,
@@ -152,6 +179,7 @@ def main():
             result.update(status="failed", error_code=str(exc).split(":")[0])
         result["usage"] = client.report() if client else {"requests": 0, "usage_complete": False}
     result["comparison_reads"] = ex.reads
+    result["scheduler_reads"] = ex.scheduler_reads
     (args.out / "result.json").write_text(json.dumps(result, indent=2) + "\n")
     print(
         json.dumps({"case_id": ex.trace.run_id, "method": args.method, "status": result["status"]})

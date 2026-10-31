@@ -1,7 +1,9 @@
 """Synthetic contract tests, not real hardware/model evidence."""
 
 import hashlib
+import importlib
 import json
+from pathlib import Path
 
 import pytest
 
@@ -21,6 +23,94 @@ from gpu_os_copilot.collectors.scheduler import affine_alignment
 from gpu_os_copilot.config import AgentConfig, CopilotError
 from gpu_os_copilot.schemas import AgentDecision, Hypothesis, Provenance
 from gpu_os_copilot.workloads.specs import expected_configuration
+
+
+@pytest.fixture
+def evaluation_modules(monkeypatch):
+    monkeypatch.syspath_prepend(str(Path(__file__).resolve().parents[2] / "scripts"))
+    return [importlib.import_module(name) for name in ("evaluation_common", "prepare_evaluation")]
+
+
+@pytest.mark.parametrize("derivation", ["none", "missing_capture", "reused_capture"])
+def test_recorded_scheduler_freezing_and_read_contract(
+    pairs, evaluation_modules, tmp_path, derivation
+):
+    from gpu_os_copilot.schemas import BenchmarkTrial, ExperimentResult
+
+    common, prepare = evaluation_modules
+    source = tmp_path / "original"
+    source.mkdir()
+    manifest = {"pairs": []}
+    for index, (batch, before, after) in enumerate(pairs):
+        row = {"batch": batch}
+        for arm, trace in (("baseline", before), ("treatment", after)):
+            row[arm] = f"{index}-{arm}.json"
+            (source / row[arm]).write_text(trace.model_dump_json())
+        manifest["pairs"].append(row)
+    manifest_path = source / "study.json"
+    manifest_path.write_text(json.dumps(manifest))
+    original = {p.name: p.read_bytes() for p in source.iterdir()}
+    before = pairs[0][1]
+    batches = []
+    for i in range(2):
+        result = ExperimentResult(
+            experiment_id=f"private-{i}",
+            workload_id="launch_test",
+            status="ok",
+            provenance=Provenance(
+                source="benchmark", confidence="measured", description="Synthetic contract only"
+            ),
+            trials=[
+                BenchmarkTrial(
+                    run_id=f"run-{j}",
+                    condition="baseline" if j < 5 else "treatment",
+                    wall_time_ms=10 if j < 5 else 5,
+                    operation_count=200,
+                    throughput_ops_s=20000 if j < 5 else 40000,
+                    cpu_set=[0] if j < 5 else [2],
+                    configuration=before.configuration,
+                )
+                for j in range(10)
+            ],
+        )
+        path = tmp_path / f"batch-{i}.json"
+        path.write_text(result.model_dump_json())
+        batches.append(str(path))
+    frozen = tmp_path / "frozen"
+    frozen.mkdir()
+    item = {
+        "trace": str(source / "0-baseline.json"),
+        "batches": batches,
+        "family": "private-family",
+        "role": "robustness",
+        "rubric": {},
+        "scheduler_manifest": str(manifest_path),
+        "scheduler_derivation": derivation,
+    }
+    case, key = prepare.prepare_case(item, "case-test", case_directory=frozen)
+    assert {p.name: p.read_bytes() for p in source.iterdir()} == original
+    assert key["scheduler_derivation"] == derivation
+    ex = common.ReplayExecutor(case, case_directory=frozen)
+    assert all(not m["available"] for m in ex.additional_metrics().values())
+    schemas = ex.tool_schemas()
+    assert next(t for t in schemas if t["function"]["name"] == READ_TOOL) == next(
+        t for t in ex.scheduler.tool_schemas() if t["function"]["name"] == READ_TOOL
+    )
+    assert ex.execute(READ_TOOL, '{"extra": 1}')["error_code"] == "INVALID_TOOL_ARGUMENTS"
+    report = ex.execute(READ_TOOL, "{}")["result"]
+    assert report["pair_count"] == 6
+    assert report["status"] == ("complete" if derivation == "none" else "incomplete")
+    assert (report["cpu_delay_change_median_ms"] is None) == (derivation != "none")
+    assert ex.comparison_evidence() == [] and ex.unread_comparison_count() == 2
+    assert ex.scheduler_reads == [READ_TOOL]
+    assert ex.execute(READ_TOOL, "{}")["error_code"] == "COMPARISON_ALREADY_CONSUMED"
+    assert ex.execute("run_affinity_ab", "{}")["error_code"] == "TOOL_NOT_ALLOWLISTED"
+    visible = json.dumps([ex.evidence(), report, schemas])
+    for private in ("private-family", str(tmp_path), '"pid"', '"configuration"'):
+        assert private not in visible
+    case["scheduler_manifest"] = "../original/study.json"
+    with pytest.raises(ValueError, match="outside"):
+        common.ReplayExecutor(case, case_directory=frozen)
 
 
 @pytest.fixture

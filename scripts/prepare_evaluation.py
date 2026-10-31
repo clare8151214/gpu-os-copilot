@@ -4,7 +4,10 @@ import argparse
 import copy
 import hashlib
 import json
+import os
 import random
+import subprocess
+import sys
 import tarfile
 from pathlib import Path
 from uuid import uuid4
@@ -42,7 +45,73 @@ def safe_extract(archive, target):
         tar.extractall(target, filter="data")
 
 
-def prepare_case(item, case_id):
+def freeze_scheduler(item, source, directory, case_id):
+    """Validate and copy recorded inputs; never change the original captures."""
+    from gpu_os_copilot.analysis.scheduling_study import load_scheduling_study
+
+    original = Path(item["scheduler_manifest"]).resolve(strict=True)
+    load_scheduling_study(original, source)
+    manifest = json.loads(original.read_text())
+    derivation = item.get("scheduler_derivation", "none")
+    if derivation not in {"none", "missing_capture", "reused_capture"}:
+        raise ValueError("Unknown scheduling derivation")
+    sources = {str(original): sha(original)}
+    target = directory / "scheduler-data"
+    target.mkdir(exist_ok=True)
+    for pair in manifest["pairs"]:
+        for arm in ("baseline", "treatment"):
+            if pair[arm] is None:
+                continue
+            path = (original.parent / pair[arm]).resolve(strict=True)
+            sources[str(path)] = sha(path)
+            name = sha(path) + ".json"
+            frozen = target / name
+            if frozen.exists():
+                if sha(frozen) != sha(path):
+                    raise ValueError("Frozen scheduling input changed")
+            else:
+                frozen.write_bytes(path.read_bytes())
+            pair[arm] = name
+    if derivation == "missing_capture":
+        manifest["pairs"][-1]["treatment"] = None
+    elif derivation == "reused_capture":
+        manifest["pairs"][-1]["treatment"] = manifest["pairs"][0]["treatment"]
+    path = target / (case_id + ".json")
+    path.write_text(json.dumps(manifest, indent=2) + "\n")
+    load_scheduling_study(path, source)
+    return str(path.relative_to(directory)), sources
+
+
+def inspect_input(case_path, source, method):
+    environment = dict(os.environ, PYTHONPATH=str(source / "src"), PYTHONNOUSERSITE="1")
+    environment.pop("MODEL_API_KEY", None)
+    process = subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "scripts/evaluation_case.py"),
+            "--case",
+            str(case_path),
+            "--method",
+            method,
+            "--offline",
+            "--inspect-input",
+            "--runner-sha256",
+            sha(source / "src/gpu_os_copilot/agent/runner.py"),
+        ],
+        env=environment,
+        cwd=source,
+        capture_output=True,
+        text=True,
+        timeout=120,
+    )
+    if process.returncode:
+        raise ValueError(
+            "Offline version-specific input inspection failed: " + process.stderr[-2000:]
+        )
+    return json.loads(process.stdout)
+
+
+def prepare_case(item, case_id, *, case_directory=None):
     source = TraceBundle.model_validate_json(Path(item["trace"]).read_text())
     if source.provenance.confidence != "measured":
         raise ValueError("Suite sources must be measured; transformations are declared separately")
@@ -116,7 +185,16 @@ def prepare_case(item, case_id):
         "batches": [r.model_dump(mode="json") for r in batches],
         "opening": opening,
     }
-    ex = ReplayExecutor(case)
+    scheduler_sources = {}
+    if item.get("runtime_evidence", False) or "scheduler_manifest" in item:
+        case["runtime_evidence"] = True
+    if "scheduler_manifest" in item:
+        if case_directory is None:
+            raise ValueError("Scheduling inputs require a frozen case directory")
+        case["scheduler_manifest"], scheduler_sources = freeze_scheduler(
+            item, source, case_directory, case_id
+        )
+    ex = ReplayExecutor(case, case_directory=case_directory)
     key = {
         "case_id": case_id,
         "family": item["family"],
@@ -124,10 +202,12 @@ def prepare_case(item, case_id):
         "data_kind": "measured" if derivation == "none" else "derived_incomplete_view",
         "derivation": derivation,
         "rubric": item["rubric"],
-        "sources_sha256": {path: sha(path) for path in sources},
-        "opening_sha256": digest(opening),
+        "sources_sha256": {**{path: sha(path) for path in sources}, **scheduler_sources},
+        "opening_sha256": digest(ex.evidence()),
         "common_tools_sha256": digest(ex.tool_schemas()),
     }
+    if "scheduler_manifest" in item:
+        key["scheduler_derivation"] = item.get("scheduler_derivation", "none")
     return case, key
 
 
@@ -142,19 +222,36 @@ def main():
     archive = Path(manifest["baseline_archive"])
     if sha(archive) != manifest["baseline_archive_sha256"]:
         raise ValueError("Historical source archive changed")
-    prepared = [prepare_case(item, "case-" + uuid4().hex[:12]) for item in manifest["cases"]]
     args.out.mkdir(parents=True, exist_ok=False)
+    args.out = args.out.resolve()
     safe_extract(archive, args.out / "legacy")
     enhanced = args.out / "enhanced-source.tar.gz"
     with tarfile.open(enhanced, "x:gz") as tar:
         for path in sorted((ROOT / "src").rglob("*.py")):
             tar.add(path, arcname=str(path.relative_to(ROOT)))
     safe_extract(enhanced, args.out / "enhanced")
+    prepared = [
+        prepare_case(item, "case-" + uuid4().hex[:12], case_directory=args.out)
+        for item in manifest["cases"]
+    ]
     random.Random(20261031).shuffle(prepared)
     keys, case_files = [], []
     for case, key in prepared:
         path = args.out / (case["case_id"] + ".json")
         path.write_text(json.dumps(case, indent=2) + "\n")
+        if case.get("runtime_evidence"):
+            inspected = {
+                method: inspect_input(path, args.out / method, method)
+                for method in ("legacy", "enhanced")
+            }
+            if any(
+                entry["common_tools_sha256"] != key["common_tools_sha256"]
+                for entry in inspected.values()
+            ):
+                raise ValueError("Version-specific tools are not identical")
+            key["opening_sha256_by_method"] = {
+                method: entry["opening_sha256"] for method, entry in inspected.items()
+            }
         case_files.append({"path": path.name, "sha256": sha(path), "case_id": case["case_id"]})
         keys.append(key)
     (args.out / "private-answer-key.json").write_text(json.dumps(keys, indent=2) + "\n")
@@ -184,6 +281,10 @@ def main():
         },
         "harness_sha256": {name: sha(ROOT / "scripts" / name) for name in HARNESS},
         "answer_key_sha256": sha(args.out / "private-answer-key.json"),
+        "scheduler_data_sha256": {
+            str(path.relative_to(args.out)): sha(path)
+            for path in sorted((args.out / "scheduler-data").glob("*.json"))
+        },
         "limitations": [
             "Identical anonymous evidence, recorded outcomes, model and call/tool/input budgets.",
             "Historical rules consume the same screened summary; no legacy metric recomputation.",
@@ -196,6 +297,17 @@ def main():
             "One session per method/case cannot establish statistical superiority.",
         ],
     }
+    if any(case.get("runtime_evidence") for case, _ in prepared):
+        plan["version"] = "matched-raw-replay-v4"
+        plan["limitations"][:3] = [
+            "Identical raw evidence, recorded outcomes, model, shared tools and budgets.",
+            "Each runtime computes its own summaries/catalog; per-method input hashes are frozen. "
+            "This compares pipelines, not models given identical derived measurements.",
+            "Rules use legacy-derived metrics and read the same scheduling study when selecting "
+            "affinity. This explicit extension reports the deterministic assessment only.",
+            "Raw timestamp contradictions are retained, with qualification determined by each "
+            "runtime. A clean ordering check is not independent GPU clock calibration.",
+        ]
     (args.out / "plan.json").write_text(json.dumps(plan, indent=2) + "\n")
     print(
         json.dumps(

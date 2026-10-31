@@ -334,3 +334,61 @@ def test_archive_cannot_escape_source_directory(modules, tmp_path):
     with pytest.raises(ValueError, match="Unsafe"):
         prepare.safe_extract(archive, tmp_path / "target")
     assert not (tmp_path / "escape.py").exists()
+
+
+def test_runtime_metrics_are_recomputed_only_with_explicit_opt_in(modules, item):
+    common, prepare, _ = modules
+    case, _ = prepare.prepare_case(item, "case-test")
+    case["opening"]["summary"]["gpu_idle_fraction"] = 999
+    assert common.ReplayExecutor(case).evidence()["summary"]["gpu_idle_fraction"] == 999
+    case["runtime_evidence"] = True
+    ex = common.ReplayExecutor(case)
+    assert 0 <= ex.evidence()["summary"]["gpu_idle_fraction"] <= 1
+    assert '"configuration"' not in json.dumps(ex.evidence())
+    assert "private-" not in json.dumps(ex.evidence())
+
+
+def test_per_method_input_hashes_are_strict_and_keep_legacy_fallback(modules):
+    run = modules[2]
+    key = {"opening_sha256": "common", "common_tools_sha256": "tools"}
+    result = {"opening_sha256": "common", "common_tools_sha256": "tools"}
+    run.validate_result_inputs(result, key, "legacy")
+    key["opening_sha256_by_method"] = {"legacy": "old", "enhanced": "new"}
+    with pytest.raises(ValueError):
+        run.validate_result_inputs(result, key, "legacy")
+    result["opening_sha256"] = "old"
+    run.validate_result_inputs(result, key, "legacy")
+    with pytest.raises(ValueError):
+        run.validate_result_inputs(result, key, "enhanced")
+    with pytest.raises(KeyError):
+        run.validate_result_inputs(result, key, "unknown")
+
+
+@pytest.mark.parametrize("mutation", ["bytes", "escape", "symlink"])
+def test_frozen_scheduler_data_is_verified_before_execution(modules, tmp_path, mutation):
+    common, prepare, run = modules
+    answer = tmp_path / "private-answer-key.json"
+    answer.write_text("[]")
+    data = tmp_path / "study.json"
+    data.write_text("{}")
+    name, expected = data.name, prepare.sha(data)
+    if mutation == "bytes":
+        data.write_text('{"changed": true}')
+    else:
+        outside = tmp_path.parent / (tmp_path.name + "-outside.json")
+        outside.write_text("{}")
+        if mutation == "escape":
+            name = "../" + outside.name
+        else:
+            data.unlink()
+            data.symlink_to(outside)
+    plan = {
+        "answer_key_sha256": prepare.sha(answer),
+        "harness_sha256": {},
+        "source_sha256": {},
+        "cases": [],
+        "scheduler_data_sha256": {name: expected},
+    }
+    (tmp_path / "plan.json").write_text(json.dumps(plan))
+    with pytest.raises(ValueError, match="scheduling|Scheduling"):
+        run.validate_suite(tmp_path)
