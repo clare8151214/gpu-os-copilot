@@ -50,7 +50,7 @@ def observability(trace: TraceBundle) -> dict:
         validated
         and covered
         and summary.gpu_idle_fraction is not None
-        and correlation["cross_layer_timing_eligible"]
+        and correlation["conditional_timing_eligible"]
     ):
         runnable = [
             event
@@ -77,7 +77,13 @@ def observability(trace: TraceBundle) -> dict:
             "upper_ms": overlap(uncertainty),
             "timestamp_uncertainty_ns": uncertainty,
             "interval_duration_uncertainty_bound_ns": 2 * uncertainty,
-            "meaning": "Conditional bounds on covered-thread overlap; not a confidence interval.",
+            "gpu_cpu_clock_error_bound_ns": correlation["gpu_cpu_clock_error_bound_ns"],
+            "clock_basis": correlation["clock_basis"],
+            "meaning": (
+                "Covered-thread overlap conditional on correct GPU/CPU timestamp conversion. "
+                "Scheduler endpoint uncertainty alone does not bound actual cross-clock "
+                "overlap; not a confidence interval or a causal attribution."
+            ),
         }
     return {
         "version": "observability-v1",
@@ -95,7 +101,10 @@ def observability(trace: TraceBundle) -> dict:
             "scope": "Validated enrolled threads; CUDA API threads bound the submission scope.",
         },
         "api_gpu_correlation": correlation,
-        "covered_thread_idle_overlap_bounds": bounds,
+        "covered_thread_idle_overlap_bounds": bounds
+        if correlation["cross_layer_timing_eligible"]
+        else None,
+        "conditional_covered_thread_idle_overlap_bounds": bounds,
         "limitations": [
             "Overlap bounds assume GPU timestamps and an affine scheduler/NVTX clock mapping.",
             "NVTX anchors do not independently bound GPU/CPU conversion error.",

@@ -54,10 +54,15 @@ def summarize(trace: TraceBundle) -> MetricSummary:
     if not api:
         missing.append("CUDA API events unavailable")
     timing = correlation_audit(trace)
-    if not timing["cross_layer_timing_eligible"]:
+    if not timing["conditional_timing_eligible"]:
         missing.append(
             "API/GPU temporal order is contradicted or incompletely checked; "
             "CPU/GPU overlap is unavailable"
+        )
+    elif not timing["cross_layer_timing_eligible"]:
+        missing.append(
+            "Independent GPU/CPU clock error bound unavailable; verified CPU/GPU overlap "
+            "is unavailable even though no API/GPU order violation was observed"
         )
     runnable = (
         [

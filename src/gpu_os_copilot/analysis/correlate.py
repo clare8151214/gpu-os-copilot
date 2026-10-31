@@ -5,7 +5,19 @@ from statistics import median
 from gpu_os_copilot.schemas import GPU_ACTIVITY_KINDS, TraceBundle
 
 
+def simulated_common_clock(trace: TraceBundle) -> bool:
+    """Fixture coordinates are defined together; this is never measured calibration."""
+    events = [e for e in trace.events if e.kind in GPU_ACTIVITY_KINDS | {"cuda_api"}]
+    return (
+        trace.provenance.confidence == "simulated"
+        and trace.clock_aligned
+        and bool(events)
+        and all(e.source == "fixture" and e.confidence == "simulated" for e in events)
+    )
+
+
 def correlate(trace: TraceBundle) -> list[dict]:
+    simulated_clock = simulated_common_clock(trace)
     api = {}
     for event in trace.events:
         if event.kind == "cuda_api" and event.pid is not None and event.correlation_id is not None:
@@ -25,8 +37,16 @@ def correlate(trace: TraceBundle) -> list[dict]:
                 {
                     "api_event_id": source.id,
                     "gpu_event_id": event.id,
-                    "launch_to_activity_ns": event.start_ns - source.start_ns,
-                    "meaning": "Correlated submission delay; not CPU scheduling latency",
+                    "launch_to_activity_ns": event.start_ns - source.start_ns
+                    if simulated_clock
+                    else None,
+                    "nominal_launch_to_activity_ns": event.start_ns - source.start_ns,
+                    "timing_status": "simulated" if simulated_clock else "conditional",
+                    "meaning": (
+                        "Timestamp difference, not CPU scheduling latency. "
+                        "Measured GPU/CPU conversion error has no verified bound; differences "
+                        "assume that conversion is correct. Identity links do not validate time."
+                    ),
                 }
             )
     return links
@@ -78,7 +98,8 @@ def correlation_audit(trace: TraceBundle) -> dict:
             linked += 1
             continue
         reasons[reason] += 1
-    eligible = bool(gpu) and linked == len(gpu)
+    order_eligible = bool(gpu) and linked == len(gpu)
+    simulated_clock = simulated_common_clock(trace)
     return {
         "observed_gpu_activities": len(gpu),
         "unambiguously_linked_activities": linked,
@@ -87,7 +108,7 @@ def correlation_audit(trace: TraceBundle) -> dict:
         "timestamp_order_status": "contradicted"
         if inversions
         else "no_violations_observed"
-        if eligible
+        if order_eligible
         else "incomplete_check",
         "observed_reversal_ns": {
             "min": min(inversions),
@@ -96,11 +117,18 @@ def correlation_audit(trace: TraceBundle) -> dict:
         }
         if inversions
         else None,
-        "cross_layer_timing_eligible": eligible,
-        "gpu_cpu_clock_error_bound_ns": None,
+        "conditional_timing_eligible": order_eligible,
+        "cross_layer_timing_eligible": order_eligible and simulated_clock,
+        "gpu_cpu_clock_error_bound_ns": 0 if order_eligible and simulated_clock else None,
+        "clock_basis": "simulated_shared_timebase"
+        if simulated_clock
+        else "unverified_gpu_cpu_conversion",
         "scope": "GPU activities in the window; their preceding API may start earlier.",
         "meaning": (
             "Temporal-order screening, not independent GPU/CPU clock calibration. "
-            "Observed reversal sizes are not upper bounds on clock error."
+            "Observed reversal sizes are not upper bounds on clock error. "
+            "Zero error is defined only for a simulated shared timebase. No measured "
+            "GPU/CPU calibration contract is currently implemented; configuration flags "
+            "or CPU/NVTX anchors cannot establish one."
         ),
     }

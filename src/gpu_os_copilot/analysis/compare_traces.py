@@ -7,6 +7,7 @@ from gpu_os_copilot.schemas import TraceBundle
 
 def compare_profiled_traces(baseline: TraceBundle, treatment: TraceBundle) -> dict:
     summaries = []
+    reports = []
     instrumentation = []
     for trace in (baseline, treatment):
         scheduler = trace.configuration.get("scheduler_capture", {})
@@ -40,11 +41,16 @@ def compare_profiled_traces(baseline: TraceBundle, treatment: TraceBundle) -> di
         required = (
             summary.gpu_idle_fraction,
             summary.cpu_runnable_delay_ms,
-            summary.sched_idle_overlap_ms,
         )
         if any(value is None for value in required):
             raise ValueError("Required before/after metrics unavailable")
+        report = observability(trace)
+        if not report["api_gpu_correlation"]["conditional_timing_eligible"]:
+            raise ValueError("API/GPU temporal order contradicted or incompletely checked")
+        if report["conditional_covered_thread_idle_overlap_bounds"] is None:
+            raise ValueError("Verified scheduler coverage of CUDA submission threads unavailable")
         summaries.append(summary)
+        reports.append(report)
     if instrumentation[0] != instrumentation[1]:
         raise ValueError("Scheduler instrumentation or clock calibration differs")
     excluded = {"capture", "scheduler_capture", "scheduler_alignment"}
@@ -81,6 +87,7 @@ def compare_profiled_traces(baseline: TraceBundle, treatment: TraceBundle) -> di
         "window",
     }
     before, after = summaries
+    conditional = [report["conditional_covered_thread_idle_overlap_bounds"] for report in reports]
     return {
         "source": "measured",
         "kind": "two_profiled_placement_captures",
@@ -90,17 +97,26 @@ def compare_profiled_traces(baseline: TraceBundle, treatment: TraceBundle) -> di
             "gpu_idle_percentage_points": 100
             * (after.gpu_idle_fraction - before.gpu_idle_fraction),
             "cpu_runnable_delay_ms": after.cpu_runnable_delay_ms - before.cpu_runnable_delay_ms,
-            "sched_idle_overlap_ms": after.sched_idle_overlap_ms - before.sched_idle_overlap_ms,
+            "sched_idle_overlap_ms": after.sched_idle_overlap_ms - before.sched_idle_overlap_ms
+            if after.sched_idle_overlap_ms is not None and before.sched_idle_overlap_ms is not None
+            else None,
+        },
+        "conditional_changes": {
+            "sched_idle_overlap_ms": conditional[1]["nominal_ms"] - conditional[0]["nominal_ms"]
+            if all(conditional)
+            else None,
+            "meaning": "Assumes correct GPU/CPU conversion in both captures; not verified overlap.",
         },
         "alignment_uncertainty_ns": [
             trace.configuration.get("scheduler_alignment", {}).get("uncertainty_ns")
             for trace in (baseline, treatment)
         ],
-        "observability": [observability(trace) for trace in (baseline, treatment)],
+        "observability": reports,
         "limitations": [
             "Two captures with profiler overhead; unprofiled throughput requires separate trials.",
             "Scheduler evidence covers validated enrolled threads; see per-capture coverage.",
             "NVTX calibration does not independently bound GPU/CPU conversion error.",
-            "Aligned overlap and placement response support candidates, not proof of a sole cause.",
+            "CPU delay response does not establish GPU idle causation; "
+            "conditional overlaps exclude unknown GPU/CPU conversion error.",
         ],
     }

@@ -363,11 +363,18 @@ Use `--json` with `demo-fixture` or `diagnose` for machine-readable output.
 
 The JSON `observability` section reports how many observed CUDA API threads have validated
 scheduling coverage, how many GPU activities have unambiguous API links, and why others remain
-unlinked. GPU events preceding their submitting API, or missing correlation evidence, suppress
-CPU/GPU overlap measurements. Passing this check does not independently calibrate GPU clocks.
-Where scheduling calibration and correlation checks pass, conditional overlap bounds reflect
-scheduler timestamp uncertainty. They exclude GPU/CPU conversion error, unobserved threads and
-profiler overhead; they are not statistical confidence intervals or proof of cause.
+unlinked. Passing the API/GPU ordering check does not independently calibrate GPU clocks.
+Measured traces currently have no independently verified GPU/CPU clock error bound, so
+`sched_idle_overlap_ms` and `covered_thread_idle_overlap_bounds` remain unavailable. CPU delay
+and GPU activity statistics remain available within their stated scopes.
+
+Where scheduling calibration and ordering checks pass,
+`conditional_covered_thread_idle_overlap_bounds` retains the calculation assuming correct
+GPU/CPU conversion. These conditional values exclude unknown GPU clock error, unobserved
+threads and profiler overhead; they do not bound actual overlap or establish a cause.
+API identity links likewise retain a `nominal_launch_to_activity_ns` difference, while verified
+`launch_to_activity_ns` is unavailable. Fixture calculations use a defined simulated timebase
+and remain explicitly simulated.
 
 Add `--help` to any command to see its options:
 

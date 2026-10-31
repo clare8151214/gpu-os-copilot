@@ -13,10 +13,13 @@ def paired_test_traces(load_fixture):
     before.provenance = Provenance(
         source="nsys_sqlite", confidence="measured", description="Unit test"
     )
+    api = next(event for event in before.events if event.kind == "cuda_api")
     before.configuration = {
         "scenario": "test",
         "capture": {"cpu_set": [0], "contender_cpu": 0, "cuda_trace_mode": "cuda-sw"},
         "scheduler_capture": {
+            "pid": api.pid,
+            "tid": api.tid,
             "coverage_validated": True,
             "target_events_verified": True,
             "loss_stats_verified": True,
