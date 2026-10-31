@@ -142,7 +142,12 @@ class Hypothesis(Model):
         "gpu_compute",
         "unknown",
     ]
-    statement: str = Field(min_length=1, max_length=2000)
+    statement: str = Field(
+        min_length=1,
+        max_length=2000,
+        description="A candidate explanation, not an observed causal fact. "
+        "Distinguish measured symptoms from proposed mechanisms.",
+    )
     evidence_event_ids: list[Identifier] = Field(default_factory=list, max_length=100)
     contradicting_event_ids: list[Identifier] = Field(default_factory=list, max_length=30)
     supporting_metric_refs: list[Identifier] = Field(default_factory=list, max_length=12)
@@ -159,14 +164,38 @@ class ExperimentPlan(Model):
     justification: str = Field(min_length=1, max_length=2000)
 
 
+class EvidenceDeferral(Model):
+    tool_name: Identifier
+    reason: Literal[
+        "not_relevant",
+        "existing_evidence_sufficient",
+        "measurement_scope_mismatch",
+        "insufficient_budget",
+    ]
+    rationale: str = Field(min_length=1, max_length=500, pattern=r"\S")
+
+
 class AgentDecision(Model):
-    hypotheses: list[Hypothesis] = Field(min_length=1, max_length=6)
+    hypotheses: list[Hypothesis] = Field(
+        min_length=1,
+        max_length=6,
+        description="Rank provisional explanations of observed symptoms independently of the "
+        "affinity decision. Abstention does not require an unknown diagnosis.",
+    )
     selected_experiment: ExperimentPlan | None = None
     claim_scope: Literal["affinity_throughput"] | None = Field(
         default=None,
         description="Required for supported/rejected; scoped to measured affinity throughput.",
     )
-    decision: Literal["test", "supported", "rejected", "inconclusive"]
+    decision: Literal["test", "supported", "rejected", "inconclusive"] = Field(
+        description="Decision about an affinity intervention, not a symptom classification."
+    )
+    deferred_evidence: list[EvidenceDeferral] = Field(
+        default_factory=list,
+        max_length=8,
+        description="Explicitly explain any offered unread evidence tool you choose to skip. "
+        "Unread evidence is not unavailable measurement. Do not defer an already consumed tool.",
+    )
     rationale: str = Field(min_length=1, max_length=3000)
 
 

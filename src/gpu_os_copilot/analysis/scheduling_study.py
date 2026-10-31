@@ -19,6 +19,8 @@ METRICS = {
     "profiled_scheduling_batch_count": "batches",
     "profiled_cpu_delay_change_median_ms": "ms",
     "profiled_throughput_change_median_fraction": "fraction",
+    "profiled_scheduling_valid_pair_count": "pairs",
+    "profiled_gpu_api_contradictory_pair_count": "pairs",
 }
 SCOPE = "Separate recorded profiled pairs; not the input trace or unprofiled throughput trials."
 
@@ -291,6 +293,15 @@ class SchedulingStudy:
             "pair_count": len(rows),
             "batch_count": len(batches),
             "valid_pair_count": len(valid),
+            "gpu_api_contradictory_pair_count": sum(
+                any(
+                    row[arm]["gpu_api_timestamp_order"] == "contradicted"
+                    for arm in ("baseline", "treatment")
+                )
+                for row in rows
+            )
+            if complete
+            else None,
             "cpu_delay_change_median_ms": median(deltas) if deltas else None,
             "cpu_delay_change_range_ms": [min(deltas), max(deltas)] if deltas else None,
             "cpu_delay_change_sample_sd_ms": stdev(deltas) if len(deltas) > 1 else None,
@@ -331,6 +342,8 @@ class SchedulingStudy:
                         report["batch_count"],
                         report["cpu_delay_change_median_ms"],
                         report["profiled_throughput_change_median_fraction"],
+                        report["valid_pair_count"],
+                        report["gpu_api_contradictory_pair_count"],
                     ),
                     strict=True,
                 )
@@ -344,6 +357,10 @@ class SchedulingStudy:
                 "available": values[name] is not None,
                 "unit": unit,
                 "scope": SCOPE,
+                "availability_state": "unread"
+                if not consumed
+                else ("available" if values[name] is not None else "unavailable"),
+                "read_tool": READ_TOOL,
             }
             for name, unit in METRICS.items()
         }

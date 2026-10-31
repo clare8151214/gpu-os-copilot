@@ -5,10 +5,11 @@ from typing import Annotated, Literal
 from pydantic import Field, ValidationError
 
 from gpu_os_copilot.agent.critic import assess_batches
+from gpu_os_copilot.agent.evidence_access import assess_evidence_access
 from gpu_os_copilot.agent.investigator import validate_investigation
 from gpu_os_copilot.agent.tools import AffinityArgs, EmptyArgs
 from gpu_os_copilot.analysis.scheduling_study import READ_TOOL
-from gpu_os_copilot.schemas import AgentDecision, Hypothesis, Identifier, Model
+from gpu_os_copilot.schemas import AgentDecision, EvidenceDeferral, Hypothesis, Identifier, Model
 
 AFFINITY_READS = {"read_recorded_comparison", "read_repeated_comparisons"}
 ACTIONS = AFFINITY_READS | {"run_affinity_ab", READ_TOOL}
@@ -75,6 +76,12 @@ class PlanArgs(Model):
     )
     justification: str = Field(min_length=1, max_length=1000)
     experiment_arguments: AffinityArgs | None = None
+    deferred_evidence: list[EvidenceDeferral] = Field(
+        default_factory=list,
+        max_length=8,
+        description="When abstaining, explicitly explain each offered unread evidence tool "
+        "you skip. Stopping an action does not discard your ranked symptom hypotheses.",
+    )
 
 
 def plan_schema(tool_names):
@@ -121,6 +128,7 @@ class ExperimentPlanner:
         self.actions = []
         self.live_attempts = 0
         self.stopped = False
+        self.deferred_evidence = []
 
     def recorded_read_policy(self):
         """Triage affinity replay using only visible metrics and already-consumed batches.
@@ -178,6 +186,7 @@ class ExperimentPlanner:
                 set(PlanArgs.model_fields)
                 | set(Hypothesis.model_fields)
                 | set(AffinityArgs.model_fields)
+                | set(EvidenceDeferral.model_fields)
             )
             return {
                 "error_code": "INVALID_PLAN_ARGUMENTS",
@@ -204,6 +213,16 @@ class ExperimentPlanner:
             hypotheses=args.hypotheses, decision="inconclusive", rationale=args.justification
         )
         issues = validate_investigation(diagnosis, self.catalog)["error_codes"]
+        if args.action == "abstain":
+            access = assess_evidence_access(
+                args.deferred_evidence,
+                self.catalog,
+                self.tool_names,
+                can_read_and_finish=remaining_responses >= 2 and remaining_tool_calls >= 1,
+            )
+            issues.extend(access["error_codes"])
+        elif args.deferred_evidence:
+            issues.append("DEFERRALS_REQUIRE_ABSTENTION_PLAN")
         cited = {
             ref for h in args.hypotheses for ref in h.evidence_event_ids + h.contradicting_event_ids
         }
@@ -310,6 +329,7 @@ class ExperimentPlanner:
             else None,
             "justification": args.justification,
             "hypotheses": [h.model_dump() for h in args.hypotheses],
+            "deferred_evidence": [item.model_dump() for item in args.deferred_evidence],
             "cost_upper_bound": cost,
             "remaining_experiment_budget": max(0, self.config.max_experiments - self.live_attempts),
             "remaining_responses": remaining_responses,
@@ -331,6 +351,7 @@ class ExperimentPlanner:
             )
         if status == "abstained":
             self.stopped = True
+            self.deferred_evidence = args.deferred_evidence
         return {"schema_version": "1.0", "result": row}
 
     def before_action(self, name, arguments, *, remaining_responses):

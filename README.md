@@ -204,6 +204,11 @@ With the Meta options below, the same flag offers a read-only scheduling tool; i
 results become available for model citations only after the model reads them. They do not
 count as unprofiled throughput trials or authorize new captures.
 
+Scheduling metrics distinguish `unread`, `available` and `unavailable`. The report includes
+verified pair counts and counts of pairs with observed GPU/API timestamp contradictions;
+an incomplete study withholds the latter aggregate. These counts describe recorded ordering,
+not an independently calibrated GPU clock.
+
 ## Connect a Meta model
 
 Install the optional API dependency:
@@ -258,6 +263,12 @@ gain and bounded cost. The controller checks the plan against available CPUs, wo
 environment, remaining budget and existing evidence. A changed or unapproved plan cannot run.
 Recorded comparison reads require no new GPU execution. Reports distinguish plans from
 consumed actions in `planning`, including abstention and any unexecuted pending action.
+Stopping an intervention does not require discarding the ranked symptom hypotheses.
+When skipping an offered scheduling study, the model can provide `deferred_evidence` with
+its reason. The `evidence_access` report distinguishes that choice from a silently unread
+study. If capacity remains, the controller requests a read or explanation; a hard budget
+stop retains an unresolved status without extra calls. A recorded reason is still a model
+judgment and does not prove that skipping the evidence was a good choice.
 
 Accepting an affinity throughput improvement requires at least two distinct, compatible
 batches with five trials per condition, an improvement of at least 5% in every batch,

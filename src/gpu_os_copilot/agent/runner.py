@@ -11,6 +11,7 @@ from pydantic import ValidationError
 
 from gpu_os_copilot.agent.budget import ModelBudget
 from gpu_os_copilot.agent.critic import assess_batches, policy, verify_decision
+from gpu_os_copilot.agent.evidence_access import assess_evidence_access, unread_opportunities
 from gpu_os_copilot.agent.investigator import evidence_catalog, validate_investigation
 from gpu_os_copilot.agent.planner import ExperimentPlanner, plan_schema
 from gpu_os_copilot.agent.tools import ToolExecutor, tool_schemas
@@ -104,7 +105,11 @@ def run_agent(client, executor: ToolExecutor, config: AgentConfig, audit_dir: Pa
                 "Choose or abstain based on measured evidence, not scenario names. "
                 "If repeated batches disagree, qualify the effect and revise earlier claims. "
                 "Return two or three distinct competing hypotheses, ordered most plausible first, "
-                "or one explicit unknown hypothesis with missing evidence when abstaining. "
+                "or one explicit unknown hypothesis only when the observations do not support "
+                "meaningful candidates. The affinity decision and symptom diagnosis are separate: "
+                "stopping an experiment or lacking a measured affinity effect does not make "
+                "observed transfer/compute activity or other supported symptoms unknown. Retain "
+                "your provisional ranked hypotheses when abstaining. "
                 "For each hypothesis give supporting_metric_refs, contradicting_metric_refs, "
                 "missing_metric_refs, counterevidence_note (including why none is available), "
                 "and a testable_prediction. Use only names in evidence_catalog.metrics; missing "
@@ -112,6 +117,11 @@ def run_agent(client, executor: ToolExecutor, config: AgentConfig, audit_dir: Pa
                 "counterevidence uses contradicting_event_ids. Keep explanations concise. "
                 "Every hypothesis is provisional, never a confirmed or sole cause. "
                 + scheduling_instruction
+                + "An availability_state of unread means a recorded tool is offered, not that "
+                "the measurement is unavailable. Before stopping, read it if it could resolve "
+                "your missing evidence, or use deferred_evidence to explain why you skip it. "
+                "Do not treat defects of the input GPU timeline as defects of unread separate "
+                "CPU captures. Use catalog counts rather than recounting study rows in prose. "
                 + "Use plan_next_action when planning an action, weighing information gain against "
                 "cost and remaining budgets. State distinct possible outcomes; abstain when value "
                 "is low. Recorded reads can be invoked directly without a separate planning turn; "
@@ -180,10 +190,17 @@ def run_agent(client, executor: ToolExecutor, config: AgentConfig, audit_dir: Pa
                     "remaining_tool_calls": config.max_tool_calls - total_calls,
                     "planner_abstained": planner.stopped,
                     "recorded_read_policy": planner.recorded_read_policy(),
+                    "unread_evidence_opportunities": unread_opportunities(
+                        catalog, planner.tool_names
+                    ),
+                    "diagnosis_instruction": "Affirming or abstaining from an affinity test is "
+                    "separate from explaining observed symptoms. Keep supported candidate "
+                    "hypotheses; unknown affinity effect is not an unknown workload symptom.",
                     "instruction": (
                         "Return the final decision JSON now using only consumed evidence. "
                         "Tools are unavailable. State missing evidence and uncertainty; "
-                        "do not invent results or claim unread comparisons were consumed."
+                        "do not invent results or claim unread comparisons were consumed. "
+                        "Explain skipped offered tools in deferred_evidence."
                         if final_response
                         else "Reserve a response for the final decision. A separate future-action "
                         "plan also needs an action response. Use a justified direct recorded read "
@@ -263,6 +280,47 @@ def run_agent(client, executor: ToolExecutor, config: AgentConfig, audit_dir: Pa
                         )
                         continue
                     proposed = decision.model_dump()
+                    access = assess_evidence_access(
+                        decision.deferred_evidence or planner.deferred_evidence,
+                        catalog,
+                        planner.tool_names,
+                        can_read_and_finish=(
+                            not planner.stopped
+                            and budget.feedback_capacity() >= 2
+                            and total_calls < config.max_tool_calls
+                        ),
+                    )
+                    access["deferral_source"] = (
+                        "final_decision"
+                        if decision.deferred_evidence
+                        else "abstention_plan"
+                        if planner.deferred_evidence
+                        else None
+                    )
+                    record("evidence_access", assessment=access, proposed_decision=proposed)
+                    if access["status"] == "unresolved" and not final_response:
+                        messages.extend(
+                            [
+                                {"role": "assistant", "content": message.get("content")},
+                                {
+                                    "role": "user",
+                                    "content": json.dumps(
+                                        {
+                                            "evidence_access_feedback": access,
+                                            "remaining_responses": budget.feedback_capacity(),
+                                            "instruction": "Read if informative and capacity "
+                                            "allows both the read and conclusion; otherwise "
+                                            "explain a deferral. Preserve symptom hypotheses. "
+                                            "Do not invent results. Budgets are unchanged.",
+                                        }
+                                    ),
+                                },
+                            ]
+                        )
+                        continue
+                    access["hard_stop_with_unresolved_evidence"] = (
+                        final_response and access["status"] == "unresolved"
+                    )
                     decision, verification = verify_decision(
                         decision,
                         executor.trace,
@@ -279,6 +337,7 @@ def run_agent(client, executor: ToolExecutor, config: AgentConfig, audit_dir: Pa
                         "proposed_decision": proposed,
                         "verification": verification,
                         "investigation": investigation,
+                        "evidence_access": access,
                         "planning": planner.report(),
                         "model_budget": budget.report(),
                         "tool_calls": total_calls,

@@ -21,7 +21,7 @@ from gpu_os_copilot.analysis.scheduling_study import (
 from gpu_os_copilot.cli import main
 from gpu_os_copilot.collectors.scheduler import affine_alignment
 from gpu_os_copilot.config import AgentConfig, CopilotError
-from gpu_os_copilot.schemas import AgentDecision, Hypothesis, Provenance
+from gpu_os_copilot.schemas import AgentDecision, EvidenceDeferral, Hypothesis, Provenance
 from gpu_os_copilot.workloads.specs import expected_configuration
 
 
@@ -402,10 +402,131 @@ def test_unread_cpu_results_never_enter_model_or_final_report(pairs, tmp_path):
     client = Client([decision(observed=False)])
     result = run_agent(client, ex, AgentConfig(max_steps=1), tmp_path)
     assert result["scheduling_evidence"]["status"] == "unread"
+    assert result["evidence_access"]["status"] == "unresolved"
+    assert result["evidence_access"]["hard_stop_with_unresolved_evidence"]
     opening = json.loads(client.messages[1]["content"])["evidence_catalog"]
     assert all(opening["metrics"][name]["value"] is None for name in METRICS)
     with pytest.raises(CopilotError, match="AGENT_INVESTIGATION_INVALID"):
         run_agent(Client([decision()]), ex, AgentConfig(max_steps=1), tmp_path)
+
+
+def test_early_final_proposal_gets_bounded_read_feedback_then_finishes(pairs, tmp_path):
+    ex = ToolExecutor(NoWorker(), pairs[0][1], scheduling_study=SchedulingStudy(pairs[0][1], pairs))
+    first = decision(observed=False)
+    client = Client([first, [tool_call("read-after-feedback", READ_TOOL, {})], decision()])
+    result = run_agent(client, ex, AgentConfig(max_steps=3), tmp_path)
+    assert result["model_budget"]["requests_reserved"] == 3
+    assert result["evidence_access"]["status"] == "accounted"
+    assert result["evidence_access"]["unread_opportunities"] == {}
+    assert result["scheduling_evidence"]["status"] == "complete"
+    assert ex.experiment_count == 0 and result["verification"]["batch_count"] == 0
+    feedback = [
+        json.loads(m["content"])["evidence_access_feedback"]
+        for m in client.messages
+        if m["role"] == "user" and "evidence_access_feedback" in json.loads(m["content"])
+    ]
+    assert len(feedback) == 1 and feedback[0]["can_read_and_finish"]
+    assert feedback[0]["unaccounted_tools"] == [READ_TOOL]
+    records = [json.loads(line) for line in Path(result["audit_path"]).read_text().splitlines()]
+    proposals = [row for row in records if row["kind"] == "evidence_access"]
+    assert proposals[0]["proposed_decision"] == first.model_dump()
+    assert proposals[0]["assessment"]["status"] == "unresolved"
+
+
+def test_model_can_explicitly_skip_evidence_without_a_forced_read(pairs, tmp_path):
+    ex = ToolExecutor(NoWorker(), pairs[0][1], scheduling_study=SchedulingStudy(pairs[0][1], pairs))
+    final = decision(observed=False)
+    final.deferred_evidence = [
+        EvidenceDeferral(
+            tool_name=READ_TOOL,
+            reason="existing_evidence_sufficient",
+            rationale="Report provisional symptoms; defer intervention attribution.",
+        )
+    ]
+    result = run_agent(Client([final]), ex, AgentConfig(max_steps=3), tmp_path)
+    assert result["model_budget"]["requests_reserved"] == 1
+    assert result["evidence_access"]["status"] == "accounted"
+    assert result["scheduling_evidence"]["status"] == "unread"
+    assert result["tool_calls"] == 0 and not ex.scheduling_read
+    assert result["decision"]["hypotheses"] == final.model_dump()["hypotheses"]
+
+
+def test_refusing_feedback_does_not_extend_budget_or_fabricate_evidence(pairs, tmp_path):
+    ex = ToolExecutor(NoWorker(), pairs[0][1], scheduling_study=SchedulingStudy(pairs[0][1], pairs))
+    result = run_agent(
+        Client([decision(observed=False), decision(observed=False)]),
+        ex,
+        AgentConfig(max_steps=2),
+        tmp_path,
+    )
+    assert result["model_budget"]["requests_reserved"] == 2
+    assert result["evidence_access"]["hard_stop_with_unresolved_evidence"]
+    assert result["scheduling_evidence"]["status"] == "unread" and result["tool_calls"] == 0
+    assert result["evidence_access"]["model_deferrals"] == []
+
+
+def test_abstention_keeps_ranked_diagnosis_and_requires_a_study_disposition(pairs, tmp_path):
+    ex = ToolExecutor(NoWorker(), pairs[0][1], scheduling_study=SchedulingStudy(pairs[0][1], pairs))
+    catalog = evidence_catalog(ex.trace)
+    catalog["metrics"].update(ex.additional_metrics())
+    planner = ExperimentPlanner(ex, AgentConfig(), catalog, {READ_TOOL})
+    final = decision(observed=False)
+    args = PlanArgs(
+        action="abstain",
+        hypotheses=[h.model_dump() for h in final.hypotheses],
+        expected_information_gain="low",
+        expected_outcomes=[],
+        justification="Keep provisional symptoms but do not investigate placement here.",
+    )
+    denied = planner.propose(
+        args.model_dump_json(), visible_ids=set(), remaining_tool_calls=10, remaining_responses=2
+    )
+    assert not planner.stopped
+    assert "UNREAD_EVIDENCE_REQUIRES_READ_OR_DEFERRAL" in denied["result"]["reason_codes"]
+    args.deferred_evidence = [
+        EvidenceDeferral(
+            tool_name=READ_TOOL,
+            reason="not_relevant",
+            rationale="This report is limited to the original trace; defer separate captures.",
+        )
+    ]
+    client = Client([[tool_call("stop", "plan_next_action", args.model_dump())], final])
+    result = run_agent(client, ex, AgentConfig(max_steps=3), tmp_path)
+    assert result["planning"]["abstained"] and result["tool_calls"] == 1
+    assert result["model_budget"]["requests_reserved"] == 2
+    assert [h["category"] for h in result["decision"]["hypotheses"]] == [
+        "cpu_scheduling",
+        "launch_overhead",
+    ]
+    assert result["evidence_access"]["status"] == "accounted" and not ex.scheduling_read
+    assert result["evidence_access"]["deferral_source"] == "abstention_plan"
+    assert result["proposed_decision"]["deferred_evidence"] == []
+
+
+def test_study_counts_are_computed_once_per_pair_and_hidden_until_read(pairs):
+    for _, before, after in pairs[:5]:
+        for trace in (before, after):
+            api = next(e for e in trace.events if e.kind == "cuda_api")
+            api.end_ns = 200000
+            api.start_ns = 150000
+    study = SchedulingStudy(pairs[0][1], pairs)
+    assert all(
+        v["availability_state"] == "unread" and v["value"] is None
+        for v in study.metrics(consumed=False).values()
+    )
+    report = study.assess()
+    assert report["gpu_api_contradictory_pair_count"] == 5
+    measured = study.metrics(consumed=True)
+    assert measured["profiled_gpu_api_contradictory_pair_count"]["value"] == 5
+    assert measured["profiled_scheduling_valid_pair_count"]["value"] == 6
+    pairs[-1] = (pairs[-1][0], pairs[-1][1], None)
+    incomplete = SchedulingStudy(pairs[0][1], pairs).metrics(consumed=True)
+    assert incomplete["profiled_scheduling_valid_pair_count"]["value"] == 5
+    assert incomplete["profiled_gpu_api_contradictory_pair_count"]["value"] is None
+    assert (
+        incomplete["profiled_gpu_api_contradictory_pair_count"]["availability_state"]
+        == "unavailable"
+    )
 
 
 def test_new_read_is_bounded_and_never_satisfies_unprofiled_claim(pairs, tmp_path):
