@@ -2,7 +2,8 @@
 
 from statistics import median
 
-from gpu_os_copilot.schemas import MetricSummary, TraceBundle
+from gpu_os_copilot.analysis.correlate import correlation_audit
+from gpu_os_copilot.schemas import GPU_ACTIVITY_KINDS, MetricSummary, TraceBundle
 
 
 def merge_intervals(intervals: list[tuple[int, int]]) -> list[tuple[int, int]]:
@@ -31,9 +32,7 @@ def summarize(trace: TraceBundle) -> MetricSummary:
     def interval(event):
         return max(start, event.start_ns), min(end, event.end_ns)
 
-    gpu = [
-        e for e in events if e.kind in {"gpu_kernel", "memcpy"} and e.device_id == window.device_id
-    ]
+    gpu = [e for e in events if e.kind in GPU_ACTIVITY_KINDS and e.device_id == window.device_id]
     kernels = [e for e in gpu if e.kind == "gpu_kernel"]
     transfers = [e for e in gpu if e.kind == "memcpy"]
     busy = merge_intervals([interval(e) for e in gpu])
@@ -54,6 +53,12 @@ def summarize(trace: TraceBundle) -> MetricSummary:
     api = [e for e in events if e.kind == "cuda_api"]
     if not api:
         missing.append("CUDA API events unavailable")
+    timing = correlation_audit(trace)
+    if not timing["cross_layer_timing_eligible"]:
+        missing.append(
+            "API/GPU temporal order is contradicted or incompletely checked; "
+            "CPU/GPU overlap is unavailable"
+        )
     runnable = (
         [
             e
@@ -66,12 +71,30 @@ def summarize(trace: TraceBundle) -> MetricSummary:
         if trace.clock_aligned
         else []
     )
-    if not runnable:
+    sched_capture = trace.configuration.get("scheduler_capture", {})
+    scheduler_available = bool(runnable) or (
+        trace.clock_aligned
+        and sched_capture.get("coverage_validated") is True
+        and sched_capture.get("target_events_verified") is True
+    )
+    if not scheduler_available:
         missing.append("Validated CPU runnable-to-running events unavailable")
     per_thread = {}
     for e in runnable:
         per_thread.setdefault((e.pid, e.tid), []).append(interval(e))
     launch_threads = {(e.pid, e.tid) for e in api if e.pid is not None and e.tid is not None}
+    scheduler_matches_launcher = scheduler_available and (
+        any(
+            (row.get("pid"), row.get("tid")) in launch_threads
+            for row in sched_capture.get("validated_threads", [])
+            if isinstance(row, dict)
+        )
+        if "thread_mappings" in sched_capture
+        and sched_capture.get("thread_lifetimes_verified") is True
+        else (sched_capture.get("pid"), sched_capture.get("tid")) in launch_threads
+        if "thread_mappings" not in sched_capture
+        else False
+    )
     matched_runnable = [e for e in runnable if (e.pid, e.tid) in launch_threads]
     overlaps = [
         (max(a, c), min(b, d))
@@ -122,10 +145,12 @@ def summarize(trace: TraceBundle) -> MetricSummary:
         if gpu
         else None,
         cpu_runnable_delay_ms=sum(duration(v) for v in per_thread.values()) / 1e6
-        if runnable
+        if scheduler_available
         else None,
         sched_idle_overlap_ms=duration(overlaps) / 1e6
-        if matched_runnable and reliable_gpu
+        if (matched_runnable or scheduler_matches_launcher)
+        and reliable_gpu
+        and timing["cross_layer_timing_eligible"]
         else None,
         wall_time_ms=trace.wall_time_ms,
         throughput_ops_s=trace.operation_count * 1000 / trace.wall_time_ms

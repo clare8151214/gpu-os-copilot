@@ -13,7 +13,7 @@ from pathlib import Path
 
 from gpu_os_copilot.collectors.nsys import build_commands, discover_schema, import_sqlite
 from gpu_os_copilot.schemas import CaptureRequest, Provenance, TraceBundle, TraceResult
-from gpu_os_copilot.workloads.launch_test import SCENARIO_SHAPES, WORKLOAD_VERSION
+from gpu_os_copilot.workloads.specs import MODEL_SCENARIOS, expected_configuration
 
 MAX_TRACE_BYTES = 256 * 1024 * 1024
 MAX_LOG_BYTES = 4 * 1024 * 1024
@@ -111,14 +111,7 @@ def bind_measurement(
 ) -> TraceBundle:
     configuration = measurement.get("configuration", {})
     expected = {
-        "scenario": request.scenario,
-        "workload_version": WORKLOAD_VERSION,
-        "seed": 42,
-        "shape": list(SCENARIO_SHAPES[request.scenario]),
-        "dtype": "float32",
-        "warmup": 10,
-        "operations": 200,
-        "synchronized": True,
+        **expected_configuration(request.scenario),
         "profiled": True,
         "torch": capabilities.torch_version,
         "cuda": capabilities.cuda_version,
@@ -128,6 +121,11 @@ def bind_measurement(
         raise ValueError("WORKLOAD_CONFIGURATION_MISMATCH")
     if measurement.get("operation_count") != 200:
         raise ValueError("WORKLOAD_OPERATION_COUNT_MISMATCH")
+    if (
+        request.scenario in MODEL_SCENARIOS
+        and measurement.get("validation", {}).get("validated") is not True
+    ):
+        raise ValueError("MODEL_OUTPUT_NOT_VALIDATED")
     start, end, warnings = measurement_window(path)
     trace = import_sqlite(path, start_ns=start, end_ns=end, capture_complete=True)
     relevant = [
@@ -192,6 +190,10 @@ def capture_trace(worker, request: CaptureRequest, output: Path) -> TraceResult:
     if not request.owner_approved:
         result.error_code = "PROFILE_APPROVAL_REQUIRED"
         return result
+    if request.sudo_scheduler and (request.cpu_context_switches or os.getuid() == 0):
+        raise ValueError(
+            "Tracefs mode requires unprivileged Nsight without context-switch sampling"
+        )
     allowed = set(os.sched_getaffinity(0))
     if not set(request.cpu_set + [request.contender_cpu]).issubset(allowed):
         raise ValueError("CPU set outside available affinity")
@@ -238,7 +240,14 @@ def capture_trace(worker, request: CaptureRequest, output: Path) -> TraceResult:
             remaining = deadline - time.monotonic()
             if remaining <= 0:
                 raise TimeoutError
-            _run(plan[stage + "_argv"], state / (stage + ".log"), remaining)
+            if stage == "profile" and request.sudo_scheduler:
+                from gpu_os_copilot.collectors.scheduler_capture import profile_with_scheduler
+
+                profile_with_scheduler(
+                    plan["profile_argv"], state / "profile.log", remaining, state
+                )
+            else:
+                _run(plan[stage + "_argv"], state / (stage + ".log"), remaining)
             artifact = report if stage == "profile" else database
             if not artifact.is_file() or artifact.stat().st_size > MAX_TRACE_BYTES:
                 raise RuntimeError("CAPTURE_ARTIFACT_INVALID")
@@ -255,13 +264,26 @@ def capture_trace(worker, request: CaptureRequest, output: Path) -> TraceResult:
             raise ValueError("WORKLOAD_MEASUREMENT_UNAVAILABLE")
         (state / "measurement.json").write_text(json.dumps(measurements[0], indent=2))
         trace = bind_measurement(database, measurements[0], request, capabilities)
+        if request.sudo_scheduler:
+            from gpu_os_copilot.collectors.scheduler import merge_scheduler
+
+            trace = merge_scheduler(
+                trace,
+                database,
+                (state / "scheduler.txt").read_text(),
+                json.loads((state / "scheduler-meta.json").read_text()),
+                measurements[0].get("clock_anchors", []),
+            )
         (state / "trace.json").write_text(trace.model_dump_json(indent=2))
         result.trace, result.provenance = trace, trace.provenance
         result.status, result.error_code = "ok", None
     except (TimeoutError, subprocess.TimeoutExpired):
         result.error_code = "CAPTURE_TIMEOUT"
-    except (OSError, ValueError, RuntimeError, sqlite3.Error, KeyError, IndexError):
+    except (OSError, ValueError, RuntimeError, sqlite3.Error, KeyError, IndexError) as error:
         result.error_code = "CAPTURE_FAILED"
+        (state / "failure.json").write_text(
+            json.dumps({"type": type(error).__name__, "message": str(error)}, indent=2)
+        )
     except KeyboardInterrupt:
         result.error_code = "CAPTURE_CANCELLED"
     finally:

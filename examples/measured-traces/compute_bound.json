@@ -3,7 +3,7 @@
   "experiment_id": "capture-7fd375cb565a4faa",
   "worker_id": "local",
   "workload_id": "launch_test",
-  "created_at": "2026-10-28T16:13:42.026255Z",
+  "created_at": "2026-10-29T16:56:26.178584Z",
   "provenance": {
     "source": "nsys_sqlite",
     "confidence": "measured",
@@ -117,6 +117,21 @@
       "device_id": null,
       "stream_id": null,
       "correlation_id": 1569,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-10",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1260893630,
+      "end_ns": 1260893995,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 1554,
       "attributes": {},
       "confidence": "measured"
     },
@@ -3646,6 +3661,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-11",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1262199413,
+      "end_ns": 1262199778,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 1568,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-13",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -6766,6 +6796,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-12",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1263484995,
+      "end_ns": 1263485427,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 1582,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-14",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -9091,6 +9136,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-13",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1264777854,
+      "end_ns": 1264778319,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 1596,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-15",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -9102,6 +9162,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 1597,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-14",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1266071742,
+      "end_ns": 1266072241,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 1610,
       "attributes": {},
       "confidence": "measured"
     },
@@ -9121,6 +9196,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-15",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1267365664,
+      "end_ns": 1267366129,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 1624,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-17",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -9132,6 +9222,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 1625,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-16",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1268660782,
+      "end_ns": 1268661214,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 1638,
       "attributes": {},
       "confidence": "measured"
     },
@@ -9151,6 +9256,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-17",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1269960984,
+      "end_ns": 1269961416,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 1652,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-19",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -9162,6 +9282,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 1653,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-18",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1271260188,
+      "end_ns": 1271260653,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 1666,
       "attributes": {},
       "confidence": "measured"
     },
@@ -9181,6 +9316,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-19",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1272554143,
+      "end_ns": 1272554642,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 1680,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-21",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -9192,6 +9342,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 1681,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-20",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1273848032,
+      "end_ns": 1273848497,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 1694,
       "attributes": {},
       "confidence": "measured"
     },
@@ -9211,6 +9376,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-21",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1275147270,
+      "end_ns": 1275147735,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 1708,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-23",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -9222,6 +9402,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 1709,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-22",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1276441225,
+      "end_ns": 1276441690,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 1722,
       "attributes": {},
       "confidence": "measured"
     },
@@ -9241,6 +9436,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-23",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1277740429,
+      "end_ns": 1277740895,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 1736,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-25",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -9252,6 +9462,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 1737,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-24",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1279036478,
+      "end_ns": 1279036943,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 1750,
       "attributes": {},
       "confidence": "measured"
     },
@@ -9271,6 +9496,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-25",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1280336779,
+      "end_ns": 1280337244,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 1764,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-27",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -9282,6 +9522,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 1765,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-26",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1281633890,
+      "end_ns": 1281634355,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 1778,
       "attributes": {},
       "confidence": "measured"
     },
@@ -9301,6 +9556,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-27",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1282934191,
+      "end_ns": 1282934690,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 1792,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-29",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -9312,6 +9582,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 1793,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-28",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1284231336,
+      "end_ns": 1284231768,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 1806,
       "attributes": {},
       "confidence": "measured"
     },
@@ -9331,6 +9616,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-29",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1285527450,
+      "end_ns": 1285527916,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 1820,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-31",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -9342,6 +9642,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 1821,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-30",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1286823432,
+      "end_ns": 1286823897,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 1834,
       "attributes": {},
       "confidence": "measured"
     },
@@ -9361,6 +9676,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-31",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1288122637,
+      "end_ns": 1288123135,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 1848,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-33",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -9372,6 +9702,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 1849,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-32",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1289418685,
+      "end_ns": 1289419117,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 1862,
       "attributes": {},
       "confidence": "measured"
     },
@@ -9391,6 +9736,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-33",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1290719019,
+      "end_ns": 1290719451,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 1876,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-35",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -9402,6 +9762,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 1877,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-34",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1292018224,
+      "end_ns": 1292018689,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 1890,
       "attributes": {},
       "confidence": "measured"
     },
@@ -9421,6 +9796,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-35",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1293314272,
+      "end_ns": 1293314737,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 1904,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-37",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -9432,6 +9822,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 1905,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-36",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1294613510,
+      "end_ns": 1294613975,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 1918,
       "attributes": {},
       "confidence": "measured"
     },
@@ -9451,6 +9856,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-37",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1295907465,
+      "end_ns": 1295907897,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 1932,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-39",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -9462,6 +9882,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 1933,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-38",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1297203513,
+      "end_ns": 1297203979,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 1946,
       "attributes": {},
       "confidence": "measured"
     },
@@ -9481,6 +9916,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-39",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1298502751,
+      "end_ns": 1298503183,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 1960,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-41",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -9492,6 +9942,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 1961,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-40",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1299794513,
+      "end_ns": 1299794979,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 1974,
       "attributes": {},
       "confidence": "measured"
     },
@@ -9511,6 +9976,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-41",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1301083152,
+      "end_ns": 1301083584,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 1988,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-43",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -9522,6 +10002,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 1989,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-42",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1302372821,
+      "end_ns": 1302373253,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2002,
       "attributes": {},
       "confidence": "measured"
     },
@@ -9541,6 +10036,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-43",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1303673122,
+      "end_ns": 1303673687,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2016,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-45",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -9552,6 +10062,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 2017,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-44",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1304968107,
+      "end_ns": 1304968539,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2030,
       "attributes": {},
       "confidence": "measured"
     },
@@ -9571,6 +10096,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-45",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1306264156,
+      "end_ns": 1306264621,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2044,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-47",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -9582,6 +10122,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 2045,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-46",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1307563394,
+      "end_ns": 1307563859,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2058,
       "attributes": {},
       "confidence": "measured"
     },
@@ -9601,6 +10156,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-47",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1308861568,
+      "end_ns": 1308862000,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2072,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-49",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -9612,6 +10182,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 2073,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-48",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1310159743,
+      "end_ns": 1310160175,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2086,
       "attributes": {},
       "confidence": "measured"
     },
@@ -9631,6 +10216,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-49",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1311458947,
+      "end_ns": 1311459413,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2100,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-51",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -9642,6 +10242,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 2101,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-50",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1312755062,
+      "end_ns": 1312755527,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2114,
       "attributes": {},
       "confidence": "measured"
     },
@@ -9661,6 +10276,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-51",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1314054234,
+      "end_ns": 1314054699,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2128,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-53",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -9672,6 +10302,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 2129,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-52",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1315348189,
+      "end_ns": 1315348654,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2142,
       "attributes": {},
       "confidence": "measured"
     },
@@ -9691,6 +10336,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-53",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1316646330,
+      "end_ns": 1316646795,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2156,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-55",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -9702,6 +10362,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 2157,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-54",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1317945601,
+      "end_ns": 1317946033,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2170,
       "attributes": {},
       "confidence": "measured"
     },
@@ -9721,6 +10396,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-55",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1319243776,
+      "end_ns": 1319244241,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2184,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-57",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -9732,6 +10422,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 2185,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-56",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1320541950,
+      "end_ns": 1320542382,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2198,
       "attributes": {},
       "confidence": "measured"
     },
@@ -9751,6 +10456,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-57",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1321836935,
+      "end_ns": 1321837401,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2212,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-59",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -9762,6 +10482,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 2213,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-58",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1323122318,
+      "end_ns": 1323122783,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2226,
       "attributes": {},
       "confidence": "measured"
     },
@@ -9781,6 +10516,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-59",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1324417303,
+      "end_ns": 1324417769,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2240,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-61",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -9792,6 +10542,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 2241,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-60",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1325715478,
+      "end_ns": 1325716010,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2254,
       "attributes": {},
       "confidence": "measured"
     },
@@ -9811,6 +10576,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-61",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1327009433,
+      "end_ns": 1327009865,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2268,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-63",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -9822,6 +10602,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 2269,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-62",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1328302292,
+      "end_ns": 1328302757,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2282,
       "attributes": {},
       "confidence": "measured"
     },
@@ -9841,6 +10636,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-63",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1329596213,
+      "end_ns": 1329596645,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2296,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-65",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -9852,6 +10662,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 2297,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-64",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1330895418,
+      "end_ns": 1330895883,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2310,
       "attributes": {},
       "confidence": "measured"
     },
@@ -9871,6 +10696,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-65",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1332189373,
+      "end_ns": 1332189805,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2324,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-67",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -9882,6 +10722,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 2325,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-66",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1333489674,
+      "end_ns": 1333490272,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2338,
       "attributes": {},
       "confidence": "measured"
     },
@@ -9901,6 +10756,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-67",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1334793165,
+      "end_ns": 1334793597,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2352,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-69",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -9912,6 +10782,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 2353,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-68",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1336093499,
+      "end_ns": 1336093998,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2366,
       "attributes": {},
       "confidence": "measured"
     },
@@ -9931,6 +10816,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-69",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1337386325,
+      "end_ns": 1337386790,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2380,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-71",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -9942,6 +10842,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 2381,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-70",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1338682340,
+      "end_ns": 1338682838,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2394,
       "attributes": {},
       "confidence": "measured"
     },
@@ -9961,6 +10876,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-71",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1339980514,
+      "end_ns": 1339980979,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2408,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-73",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -9972,6 +10902,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 2409,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-72",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1341275499,
+      "end_ns": 1341275964,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2422,
       "attributes": {},
       "confidence": "measured"
     },
@@ -9991,6 +10936,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-73",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1342571581,
+      "end_ns": 1342572013,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2436,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-75",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -10002,6 +10962,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 2437,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-74",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1343875071,
+      "end_ns": 1343875537,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2450,
       "attributes": {},
       "confidence": "measured"
     },
@@ -10021,6 +10996,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-75",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1345171086,
+      "end_ns": 1345171552,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2464,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-77",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -10032,6 +11022,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 2465,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-76",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1346465041,
+      "end_ns": 1346465639,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2478,
       "attributes": {},
       "confidence": "measured"
     },
@@ -10051,6 +11056,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-77",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1347757900,
+      "end_ns": 1347758365,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2492,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-79",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -10062,6 +11082,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 2493,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-78",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1349049695,
+      "end_ns": 1349050127,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2506,
       "attributes": {},
       "confidence": "measured"
     },
@@ -10081,6 +11116,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-79",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1350345710,
+      "end_ns": 1350346176,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2520,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-81",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -10092,6 +11142,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 2521,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-80",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1351640695,
+      "end_ns": 1351641127,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2534,
       "attributes": {},
       "confidence": "measured"
     },
@@ -10111,6 +11176,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-81",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1352934650,
+      "end_ns": 1352935082,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2548,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-83",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -10122,6 +11202,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 2549,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-82",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1354229602,
+      "end_ns": 1354230101,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2562,
       "attributes": {},
       "confidence": "measured"
     },
@@ -10141,6 +11236,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-83",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1355525651,
+      "end_ns": 1355526116,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2576,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-85",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -10152,6 +11262,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 2577,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-84",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1356821699,
+      "end_ns": 1356822164,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2590,
       "attributes": {},
       "confidence": "measured"
     },
@@ -10171,6 +11296,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-85",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1358118877,
+      "end_ns": 1358119342,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2604,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-87",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -10182,6 +11322,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 2605,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-86",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1359419211,
+      "end_ns": 1359419743,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2618,
       "attributes": {},
       "confidence": "measured"
     },
@@ -10201,6 +11356,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-87",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1360716223,
+      "end_ns": 1360716688,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2632,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-89",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -10212,6 +11382,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 2633,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-88",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1362008018,
+      "end_ns": 1362008483,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2646,
       "attributes": {},
       "confidence": "measured"
     },
@@ -10231,6 +11416,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-89",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1363308319,
+      "end_ns": 1363308917,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2660,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-91",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -10242,6 +11442,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 2661,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-90",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1364609717,
+      "end_ns": 1364610315,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2674,
       "attributes": {},
       "confidence": "measured"
     },
@@ -10261,6 +11476,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-91",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1365897359,
+      "end_ns": 1365897824,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2688,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-93",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -10272,6 +11502,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 2689,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-92",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1367196464,
+      "end_ns": 1367196929,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2702,
       "attributes": {},
       "confidence": "measured"
     },
@@ -10291,6 +11536,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-93",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1368486133,
+      "end_ns": 1368486631,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2716,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-95",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -10302,6 +11562,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 2717,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-94",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1369784341,
+      "end_ns": 1369784773,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2730,
       "attributes": {},
       "confidence": "measured"
     },
@@ -10321,6 +11596,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-95",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1371077266,
+      "end_ns": 1371077864,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2744,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-97",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -10332,6 +11622,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 2745,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-96",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1372377500,
+      "end_ns": 1372377932,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2758,
       "attributes": {},
       "confidence": "measured"
     },
@@ -10351,6 +11656,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-97",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1373682021,
+      "end_ns": 1373682519,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2772,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-99",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -10362,6 +11682,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 2773,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-98",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1374981292,
+      "end_ns": 1374981724,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2786,
       "attributes": {},
       "confidence": "measured"
     },
@@ -10381,6 +11716,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-99",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1376277307,
+      "end_ns": 1376277805,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2800,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-101",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -10392,6 +11742,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 2801,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-100",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1377572292,
+      "end_ns": 1377572757,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2814,
       "attributes": {},
       "confidence": "measured"
     },
@@ -10411,6 +11776,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-101",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1378870699,
+      "end_ns": 1378871264,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2828,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-103",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -10422,6 +11802,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 2829,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-102",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1380162329,
+      "end_ns": 1380162893,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2842,
       "attributes": {},
       "confidence": "measured"
     },
@@ -10441,6 +11836,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-103",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1381459540,
+      "end_ns": 1381460005,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2856,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-105",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -10452,6 +11862,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 2857,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-104",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1382755488,
+      "end_ns": 1382755987,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2870,
       "attributes": {},
       "confidence": "measured"
     },
@@ -10471,6 +11896,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-105",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1384048280,
+      "end_ns": 1384048746,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2884,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-107",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -10482,6 +11922,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 2885,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-106",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1385346621,
+      "end_ns": 1385347186,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2898,
       "attributes": {},
       "confidence": "measured"
     },
@@ -10501,6 +11956,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-107",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1386636124,
+      "end_ns": 1386636755,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2912,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-109",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -10512,6 +11982,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 2913,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-108",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1387935462,
+      "end_ns": 1387935927,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2926,
       "attributes": {},
       "confidence": "measured"
     },
@@ -10531,6 +12016,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-109",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1389233636,
+      "end_ns": 1389234101,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2940,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-111",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -10542,6 +12042,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 2941,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-110",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1390534901,
+      "end_ns": 1390535366,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2954,
       "attributes": {},
       "confidence": "measured"
     },
@@ -10561,6 +12076,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-111",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1391837328,
+      "end_ns": 1391837860,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2968,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-113",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -10572,6 +12102,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 2969,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-112",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1393144009,
+      "end_ns": 1393144441,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2982,
       "attributes": {},
       "confidence": "measured"
     },
@@ -10591,6 +12136,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-113",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1394447532,
+      "end_ns": 1394447964,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 2996,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-115",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -10602,6 +12162,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 2997,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-114",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1395756306,
+      "end_ns": 1395756771,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3010,
       "attributes": {},
       "confidence": "measured"
     },
@@ -10621,6 +12196,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-115",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1397055577,
+      "end_ns": 1397056009,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3024,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-117",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -10632,6 +12222,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 3025,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-116",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1398358137,
+      "end_ns": 1398358603,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3038,
       "attributes": {},
       "confidence": "measured"
     },
@@ -10651,6 +12256,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-117",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1399662592,
+      "end_ns": 1399663057,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3052,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-119",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -10662,6 +12282,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 3053,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-118",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1400968242,
+      "end_ns": 1400968740,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3066,
       "attributes": {},
       "confidence": "measured"
     },
@@ -10681,6 +12316,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-119",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1402272729,
+      "end_ns": 1402273161,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3080,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-121",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -10692,6 +12342,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 3081,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-120",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1403575223,
+      "end_ns": 1403575688,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3094,
       "attributes": {},
       "confidence": "measured"
     },
@@ -10711,6 +12376,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-121",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1404878647,
+      "end_ns": 1404879079,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3108,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-123",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -10722,6 +12402,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 3109,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-122",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1406172603,
+      "end_ns": 1406173068,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3122,
       "attributes": {},
       "confidence": "measured"
     },
@@ -10741,6 +12436,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-123",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1407473934,
+      "end_ns": 1407474366,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3136,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-125",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -10752,6 +12462,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 3137,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-124",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1408772108,
+      "end_ns": 1408772540,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3150,
       "attributes": {},
       "confidence": "measured"
     },
@@ -10771,6 +12496,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-125",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1410072409,
+      "end_ns": 1410072841,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3164,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-127",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -10782,6 +12522,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 3165,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-126",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1411375933,
+      "end_ns": 1411376398,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3178,
       "attributes": {},
       "confidence": "measured"
     },
@@ -10801,6 +12556,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-127",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1412674075,
+      "end_ns": 1412674540,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3192,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-129",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -10812,6 +12582,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 3193,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-128",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1413975406,
+      "end_ns": 1413975871,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3206,
       "attributes": {},
       "confidence": "measured"
     },
@@ -10831,6 +12616,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-129",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1415279960,
+      "end_ns": 1415280425,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3220,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-131",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -10842,6 +12642,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 3221,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-130",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1416582387,
+      "end_ns": 1416582852,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3234,
       "attributes": {},
       "confidence": "measured"
     },
@@ -10861,6 +12676,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-131",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1417881658,
+      "end_ns": 1417882090,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3248,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-133",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -10872,6 +12702,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 3249,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-132",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1419184052,
+      "end_ns": 1419184517,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3262,
       "attributes": {},
       "confidence": "measured"
     },
@@ -10891,6 +12736,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-133",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1420488606,
+      "end_ns": 1420489071,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3276,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-135",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -10902,6 +12762,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 3277,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-134",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1421783624,
+      "end_ns": 1421784056,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3290,
       "attributes": {},
       "confidence": "measured"
     },
@@ -10921,6 +12796,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-135",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1423086052,
+      "end_ns": 1423086484,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3304,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-137",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -10932,6 +12822,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 3305,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-136",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1424387383,
+      "end_ns": 1424387848,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3318,
       "attributes": {},
       "confidence": "measured"
     },
@@ -10951,6 +12856,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-137",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1425685558,
+      "end_ns": 1425686023,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3332,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-139",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -10962,6 +12882,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 3333,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-138",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1426987985,
+      "end_ns": 1426988450,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3346,
       "attributes": {},
       "confidence": "measured"
     },
@@ -10981,6 +12916,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-139",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1428287256,
+      "end_ns": 1428287688,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3360,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-141",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -10992,6 +12942,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 3361,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-140",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1429593903,
+      "end_ns": 1429594435,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3374,
       "attributes": {},
       "confidence": "measured"
     },
@@ -11011,6 +12976,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-141",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1430895301,
+      "end_ns": 1430895733,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3388,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-143",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -11022,6 +13002,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 3389,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-142",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1432199821,
+      "end_ns": 1432200286,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3402,
       "attributes": {},
       "confidence": "measured"
     },
@@ -11041,6 +13036,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-143",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1433502282,
+      "end_ns": 1433502814,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3416,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-145",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -11052,6 +13062,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 3417,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-144",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1434801487,
+      "end_ns": 1434802018,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3430,
       "attributes": {},
       "confidence": "measured"
     },
@@ -11071,6 +13096,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-145",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1436103914,
+      "end_ns": 1436104379,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3444,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-147",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -11082,6 +13122,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 3445,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-146",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1437403185,
+      "end_ns": 1437403617,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3458,
       "attributes": {},
       "confidence": "measured"
     },
@@ -11101,6 +13156,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-147",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1438709832,
+      "end_ns": 1438710297,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3472,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-149",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -11112,6 +13182,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 3473,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-148",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1440018672,
+      "end_ns": 1440019137,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3486,
       "attributes": {},
       "confidence": "measured"
     },
@@ -11131,6 +13216,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-149",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1441320103,
+      "end_ns": 1441320568,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3500,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-151",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -11142,6 +13242,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 3501,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-150",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1442626683,
+      "end_ns": 1442627149,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3514,
       "attributes": {},
       "confidence": "measured"
     },
@@ -11161,6 +13276,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-151",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1443926985,
+      "end_ns": 1443927450,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3528,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-153",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -11172,6 +13302,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 3529,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-152",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1445228382,
+      "end_ns": 1445228847,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3542,
       "attributes": {},
       "confidence": "measured"
     },
@@ -11191,6 +13336,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-153",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1446530843,
+      "end_ns": 1446531308,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3556,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-155",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -11202,6 +13362,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 3557,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-154",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1447830014,
+      "end_ns": 1447830479,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3570,
       "attributes": {},
       "confidence": "measured"
     },
@@ -11221,6 +13396,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-155",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1449132442,
+      "end_ns": 1449132940,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3584,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-157",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -11232,6 +13422,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 3585,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-156",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1450432743,
+      "end_ns": 1450433241,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3598,
       "attributes": {},
       "confidence": "measured"
     },
@@ -11251,6 +13456,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-157",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1451732014,
+      "end_ns": 1451732446,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3612,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-159",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -11262,6 +13482,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 3613,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-158",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1453034408,
+      "end_ns": 1453034906,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3626,
       "attributes": {},
       "confidence": "measured"
     },
@@ -11281,6 +13516,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-159",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1454331519,
+      "end_ns": 1454331985,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3640,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-161",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -11292,6 +13542,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 3641,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-160",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1455633947,
+      "end_ns": 1455634379,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3654,
       "attributes": {},
       "confidence": "measured"
     },
@@ -11311,6 +13576,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-161",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1456934281,
+      "end_ns": 1456934713,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3668,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-163",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -11322,6 +13602,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 3669,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-162",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1458235612,
+      "end_ns": 1458236077,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3682,
       "attributes": {},
       "confidence": "measured"
     },
@@ -11341,6 +13636,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-163",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1459533820,
+      "end_ns": 1459534285,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3696,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-165",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -11352,6 +13662,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 3697,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-164",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1460835184,
+      "end_ns": 1460835616,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3710,
       "attributes": {},
       "confidence": "measured"
     },
@@ -11371,6 +13696,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-165",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1462135485,
+      "end_ns": 1462136050,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3724,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-167",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -11382,6 +13722,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 3725,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-166",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1463431500,
+      "end_ns": 1463431966,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3738,
       "attributes": {},
       "confidence": "measured"
     },
@@ -11401,6 +13756,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-167",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1464732898,
+      "end_ns": 1464733330,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3752,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-169",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -11412,6 +13782,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 3753,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-168",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1466037419,
+      "end_ns": 1466037884,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3766,
       "attributes": {},
       "confidence": "measured"
     },
@@ -11431,6 +13816,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-169",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1467339879,
+      "end_ns": 1467340378,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3780,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-171",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -11442,6 +13842,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 3781,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-170",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1468641277,
+      "end_ns": 1468641742,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3794,
       "attributes": {},
       "confidence": "measured"
     },
@@ -11461,6 +13876,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-171",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1469937292,
+      "end_ns": 1469937724,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3808,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-173",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -11472,6 +13902,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 3809,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-172",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1471240849,
+      "end_ns": 1471241314,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3822,
       "attributes": {},
       "confidence": "measured"
     },
@@ -11491,6 +13936,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-173",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1472541083,
+      "end_ns": 1472541549,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3836,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-175",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -11502,6 +13962,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 3837,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-174",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1473841451,
+      "end_ns": 1473841916,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3850,
       "attributes": {},
       "confidence": "measured"
     },
@@ -11521,6 +13996,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-175",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1475144842,
+      "end_ns": 1475145307,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3864,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-177",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -11532,6 +14022,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 3865,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-176",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1476449396,
+      "end_ns": 1476449828,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3878,
       "attributes": {},
       "confidence": "measured"
     },
@@ -11551,6 +14056,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-177",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1477748634,
+      "end_ns": 1477749099,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3892,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-179",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -11562,6 +14082,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 3893,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-178",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1479053221,
+      "end_ns": 1479053686,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3906,
       "attributes": {},
       "confidence": "measured"
     },
@@ -11581,6 +14116,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-179",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1480355648,
+      "end_ns": 1480356080,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3920,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-181",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -11592,6 +14142,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 3921,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-180",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1481654853,
+      "end_ns": 1481655318,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3934,
       "attributes": {},
       "confidence": "measured"
     },
@@ -11611,6 +14176,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-181",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1482961633,
+      "end_ns": 1482962098,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3948,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-183",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -11622,6 +14202,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 3949,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-182",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1484267250,
+      "end_ns": 1484267848,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3962,
       "attributes": {},
       "confidence": "measured"
     },
@@ -11641,6 +14236,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-183",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1485571837,
+      "end_ns": 1485572435,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3976,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-185",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -11652,6 +14262,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 3977,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-184",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1486872138,
+      "end_ns": 1486872736,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 3990,
       "attributes": {},
       "confidence": "measured"
     },
@@ -11671,6 +14296,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-185",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1488177788,
+      "end_ns": 1488178353,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 4004,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-187",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -11682,6 +14322,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 4005,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-186",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1489480050,
+      "end_ns": 1489480515,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 4018,
       "attributes": {},
       "confidence": "measured"
     },
@@ -11701,6 +14356,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-187",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1490784637,
+      "end_ns": 1490785069,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 4032,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-189",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -11712,6 +14382,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 4033,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-188",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1492085968,
+      "end_ns": 1492086566,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 4046,
       "attributes": {},
       "confidence": "measured"
     },
@@ -11731,6 +14416,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-189",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1493386269,
+      "end_ns": 1493386701,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 4060,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-191",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -11742,6 +14442,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 4061,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-190",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1494691886,
+      "end_ns": 1494692351,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 4074,
       "attributes": {},
       "confidence": "measured"
     },
@@ -11761,6 +14476,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-191",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1495992187,
+      "end_ns": 1495992652,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 4088,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-193",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -11772,6 +14502,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 4089,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-192",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1497298867,
+      "end_ns": 1497299332,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 4102,
       "attributes": {},
       "confidence": "measured"
     },
@@ -11791,6 +14536,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-193",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1498600265,
+      "end_ns": 1498600730,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 4116,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-195",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -11802,6 +14562,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 4117,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-194",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1499902692,
+      "end_ns": 1499903124,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 4130,
       "attributes": {},
       "confidence": "measured"
     },
@@ -11821,6 +14596,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-195",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1501206283,
+      "end_ns": 1501206748,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 4144,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-197",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -11832,6 +14622,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 4145,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-196",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1502506451,
+      "end_ns": 1502507049,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 4158,
       "attributes": {},
       "confidence": "measured"
     },
@@ -11851,6 +14656,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-197",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1503811038,
+      "end_ns": 1503811470,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 4172,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-199",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -11862,6 +14682,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 4173,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-198",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1505114495,
+      "end_ns": 1505114960,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 4186,
       "attributes": {},
       "confidence": "measured"
     },
@@ -11881,6 +14716,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-199",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1506416956,
+      "end_ns": 1506417521,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 4200,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-201",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -11892,6 +14742,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 4201,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-200",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1507715131,
+      "end_ns": 1507715596,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 4214,
       "attributes": {},
       "confidence": "measured"
     },
@@ -11911,6 +14776,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-201",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1509016462,
+      "end_ns": 1509017060,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 4228,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-203",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -11922,6 +14802,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 4229,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-202",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1510321049,
+      "end_ns": 1510321514,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 4242,
       "attributes": {},
       "confidence": "measured"
     },
@@ -11941,6 +14836,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-203",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1511622380,
+      "end_ns": 1511622845,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 4256,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-205",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -11952,6 +14862,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 4257,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-204",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1512924841,
+      "end_ns": 1512925306,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 4270,
       "attributes": {},
       "confidence": "measured"
     },
@@ -11971,6 +14896,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-205",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1514227235,
+      "end_ns": 1514227700,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 4284,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-207",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -11982,6 +14922,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 4285,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-206",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1515524147,
+      "end_ns": 1515524512,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 4298,
       "attributes": {},
       "confidence": "measured"
     },
@@ -12001,6 +14956,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-207",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1516824448,
+      "end_ns": 1516824813,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 4312,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-209",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -12016,6 +14986,21 @@
       "confidence": "measured"
     },
     {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-208",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1518127939,
+      "end_ns": 1518128304,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 4326,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
       "id": "CUPTI_ACTIVITY_KIND_KERNEL-210",
       "source": "nsys_sqlite",
       "kind": "gpu_kernel",
@@ -12027,6 +15012,21 @@
       "device_id": 0,
       "stream_id": 7,
       "correlation_id": 4327,
+      "attributes": {},
+      "confidence": "measured"
+    },
+    {
+      "id": "CUPTI_ACTIVITY_KIND_MEMSET-209",
+      "source": "nsys_sqlite",
+      "kind": "memset",
+      "start_ns": 1519430366,
+      "end_ns": 1519430732,
+      "unit": "ns",
+      "pid": null,
+      "tid": null,
+      "device_id": 0,
+      "stream_id": 7,
+      "correlation_id": 4340,
       "attributes": {},
       "confidence": "measured"
     },

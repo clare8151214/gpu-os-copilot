@@ -24,12 +24,22 @@ class FakeClient:
     def complete(self, messages, tools):
         self.turn += 1
         hypotheses = diagnose(self.trace, summarize(self.trace))
-        if self.turn == 1:
+        # Scripted candidates for protocol tests only, not a second diagnostic algorithm.
+        hypotheses[0].counterevidence_note = "Mock candidate; causal evidence is not established."
+        hypotheses[0].testable_prediction = "A controlled comparison may change this candidate."
+        alternative = hypotheses[0].model_copy(deep=True)
+        alternative.category = "synchronization"
+        alternative.statement = "A competing synchronization explanation remains unverified."
+        alternative.evidence_event_ids = []
+        alternative.missing_evidence = ["Validated synchronization attribution"]
+        alternative.confidence = "low"
+        hypotheses.append(alternative)
+        if tools and self.turn == 1:
             calls = [
                 tool_call("summary", "get_performance_summary", {"run_id": self.trace.run_id}),
                 tool_call("available", "list_available_experiments", {}),
             ]
-        elif self.turn == 2:
+        elif tools and self.turn == 2:
             calls = [
                 tool_call(
                     "timeline",

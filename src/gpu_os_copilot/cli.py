@@ -10,6 +10,7 @@ from uuid import uuid4
 from pydantic import ValidationError
 
 from gpu_os_copilot.analysis.metrics import summarize
+from gpu_os_copilot.analysis.observability import observability
 from gpu_os_copilot.analysis.rule_baseline import diagnose
 from gpu_os_copilot.config import AgentConfig, CopilotError
 from gpu_os_copilot.reports.render import render
@@ -21,6 +22,7 @@ from gpu_os_copilot.schemas import (
     TraceRequest,
 )
 from gpu_os_copilot.worker.local import LocalWorker
+from gpu_os_copilot.workloads.specs import SCENARIO_SHAPES
 
 
 def parser() -> argparse.ArgumentParser:
@@ -35,6 +37,11 @@ def parser() -> argparse.ArgumentParser:
     )
     diagnosis = commands.add_parser("diagnose", help="Analyze canonical JSON or Nsight SQLite")
     diagnosis.add_argument("--trace", type=Path, required=True)
+    diagnosis.add_argument(
+        "--scheduler-study",
+        type=Path,
+        help="Read a manifest of recorded profiled CPU scheduling pairs; no new capture",
+    )
     diagnosis.add_argument("--start-ns", type=int, help="Required for SQLite; excludes warmup")
     diagnosis.add_argument("--end-ns", type=int, help="Required for SQLite; excludes shutdown")
     diagnosis.add_argument("--device-id", type=int, default=0)
@@ -60,11 +67,16 @@ def parser() -> argparse.ArgumentParser:
     trace = commands.add_parser("trace", help="Plan or capture the bounded bundled workload")
     trace.add_argument(
         "--scenario",
-        choices=["cpu_contention", "transfer_bound", "compute_bound"],
+        choices=list(SCENARIO_SHAPES),
         default="cpu_contention",
     )
     trace.add_argument("--out", type=Path, required=True)
     trace.add_argument("--cpu-context-switches", action="store_true")
+    trace.add_argument(
+        "--sudo-scheduler",
+        action="store_true",
+        help="Bounded root tracefs helper for up to 32 threads of this workload",
+    )
     trace.add_argument("--cuda-trace-mode", choices=["cuda", "cuda-sw"], default="cuda-sw")
     trace.add_argument(
         "--cpus", type=int, nargs=1, help="Launcher CPU; defaults to first available"
@@ -77,7 +89,7 @@ def parser() -> argparse.ArgumentParser:
     experiment.add_argument("--kind", choices=["affinity_ab"], default="affinity_ab")
     experiment.add_argument(
         "--scenario",
-        choices=["cpu_contention", "transfer_bound", "compute_bound"],
+        choices=list(SCENARIO_SHAPES),
         default="cpu_contention",
     )
     experiment.add_argument(
@@ -108,6 +120,7 @@ def main(argv: list[str] | None = None) -> int:
                     timeout_s=args.timeout,
                     cuda_trace_mode=args.cuda_trace_mode,
                     cpu_context_switches=args.cpu_context_switches,
+                    sudo_scheduler=args.sudo_scheduler,
                     owner_approved=True,
                     provenance=Provenance(
                         source="nsys_sqlite",
@@ -123,19 +136,31 @@ def main(argv: list[str] | None = None) -> int:
                     )
                     output["gpu_idle_fraction"] = summarize(result.trace).gpu_idle_fraction
                     output["event_count"] = len(result.trace.events)
+                    output["observability"] = observability(result.trace)
                 print(json.dumps(output, indent=2))
                 return 0 if result.status == "ok" else 2
-            print(
-                json.dumps(
-                    worker.plan_trace(
-                        args.scenario,
-                        args.out,
-                        args.cpu_context_switches,
-                        args.cuda_trace_mode,
-                    ),
-                    indent=2,
-                )
+            plan = worker.plan_trace(
+                args.scenario, args.out, args.cpu_context_switches, args.cuda_trace_mode
             )
+            if args.sudo_scheduler:
+                plan["scheduler_helper"] = {
+                    "command": [
+                        "sudo",
+                        "-n",
+                        "timeout",
+                        "25",
+                        "<python>",
+                        "-m",
+                        "gpu_os_copilot.collectors.tracefs_helper",
+                    ],
+                    "scope": "Up to 32 enrolled threads of one owned workload; private instance",
+                    "clock": "mono_raw",
+                    "duration_limit_s": 20,
+                    "buffer_kb_per_cpu": 512,
+                    "events": ["sched_switch", "sched_wakeup"],
+                    "cleanup": "Disable/remove this instance; no sysctl or permission changes",
+                }
+            print(json.dumps(plan, indent=2))
             return 0
         if args.command == "experiment":
             cpus = args.cpus if args.cpus is not None else worker.capabilities().cpu_affinity[1:2]
@@ -189,8 +214,16 @@ def main(argv: list[str] | None = None) -> int:
         hypotheses = diagnose(trace, summary)
         output = {
             "summary": summary.model_dump(mode="json"),
+            "observability": observability(trace),
             "hypotheses": [h.model_dump() for h in hypotheses],
         }
+        scheduling_study = None
+        if getattr(args, "scheduler_study", None) is not None:
+            from gpu_os_copilot.analysis.scheduling_study import load_scheduling_study
+
+            scheduling_study = load_scheduling_study(args.scheduler_study, trace)
+            if args.mode == "rules":
+                output["scheduling_evidence"] = scheduling_study.assess()
         if args.mode != "rules":
             from gpu_os_copilot.agent.fake_client import FakeClient
             from gpu_os_copilot.agent.meta_client import MetaClient
@@ -212,6 +245,7 @@ def main(argv: list[str] | None = None) -> int:
                 and args.mode == "meta"
                 and trace.provenance.confidence != "simulated",
                 max_experiments=config.max_experiments,
+                scheduling_study=scheduling_study,
             )
             config.dry_run = not executor.owner_approved
             output["agent"] = run_agent(client, executor, config, args.audit_dir)
@@ -219,6 +253,8 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps(output, indent=2))
         else:
             print(render(summary, hypotheses))
+            if "scheduling_evidence" in output:
+                print(json.dumps(output["scheduling_evidence"], indent=2))
             if "agent" in output:
                 print(json.dumps(output["agent"], indent=2))
         return 0

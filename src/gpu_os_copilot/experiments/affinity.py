@@ -12,6 +12,7 @@ from uuid import uuid4
 
 from gpu_os_copilot.experiments.compare import compare_trials
 from gpu_os_copilot.schemas import BenchmarkTrial, ExperimentRequest, ExperimentResult, Provenance
+from gpu_os_copilot.workloads.specs import MODEL_SCENARIOS, expected_configuration
 
 
 def _invoke(argv: list[str], timeout: float, max_output: int) -> dict:
@@ -137,6 +138,14 @@ def run_affinity_ab(worker, request: ExperimentRequest) -> ExperimentResult:
                     max_output=request.max_output_bytes,
                 )
                 finished_at = datetime.now(UTC)
+                if request.scenario in MODEL_SCENARIOS:
+                    if raw.get("validation", {}).get("validated") is not True or any(
+                        raw.get("configuration", {}).get(k) != v
+                        for k, v in expected_configuration(request.scenario).items()
+                    ):
+                        raise ValueError(
+                            "Model measurement is not validated or configuration differs"
+                        )
                 trial = BenchmarkTrial(
                     run_id=f"trial-{uuid4().hex}",
                     condition=condition,
@@ -145,6 +154,7 @@ def run_affinity_ab(worker, request: ExperimentRequest) -> ExperimentResult:
                     throughput_ops_s=raw["operation_count"] * 1000 / raw["wall_time_ms"],
                     cpu_set=cpus,
                     configuration={**raw["configuration"], "host": caps.model_dump()},
+                    validation=raw.get("validation", {}),
                     started_at=started_at,
                     finished_at=finished_at,
                 )

@@ -14,6 +14,9 @@ class AgentConfig(Model):
     max_experiments: Annotated[int, Field(strict=True, ge=0, le=2)] = 2
     max_tool_calls: Annotated[int, Field(strict=True, ge=1, le=20)] = 12
     max_completion_tokens: Annotated[int, Field(strict=True, ge=256, le=8192)] = 4096
+    max_total_completion_tokens: Annotated[int, Field(strict=True, ge=256, le=81920)] = 20480
+    max_request_bytes: Annotated[int, Field(strict=True, ge=1024, le=1048576)] = 131072
+    max_session_request_bytes: Annotated[int, Field(strict=True, ge=1024, le=10485760)] = 524288
     reasoning_effort: Literal["minimal", "low", "medium", "high"] = "medium"
     dry_run: bool = True
 
@@ -38,6 +41,9 @@ class AgentConfig(Model):
             max_steps=int(os.getenv("META_MAX_AGENT_STEPS", "5")),
             max_experiments=int(os.getenv("META_MAX_EXPERIMENTS", "2")),
             max_completion_tokens=int(os.getenv("META_MAX_COMPLETION_TOKENS", "4096")),
+            max_total_completion_tokens=int(os.getenv("META_MAX_TOTAL_COMPLETION_TOKENS", "20480")),
+            max_request_bytes=int(os.getenv("META_MAX_REQUEST_BYTES", "131072")),
+            max_session_request_bytes=int(os.getenv("META_MAX_SESSION_REQUEST_BYTES", "524288")),
             reasoning_effort=os.getenv("META_REASONING_EFFORT", "medium"),
             dry_run=os.getenv("DRY_RUN", "1") != "0",
         )

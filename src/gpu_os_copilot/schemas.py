@@ -7,11 +7,14 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 Identifier = Annotated[str, Field(pattern=r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,95}$")]
 NonNegativeInt = Annotated[int, Field(strict=True, ge=0)]
-EventKind = Literal["cuda_api", "gpu_kernel", "memcpy", "cpu_sched", "nvtx", "other"]
+EventKind = Literal["cuda_api", "gpu_kernel", "memcpy", "memset", "cpu_sched", "nvtx", "other"]
+GPU_ACTIVITY_KINDS = frozenset({"gpu_kernel", "memcpy", "memset"})
 Source = Literal["fixture", "nsys_sqlite", "linux_trace", "benchmark", "environment"]
 Confidence = Literal["measured", "derived", "simulated"]
 Scenario = Literal["cpu_starvation", "transfer_bound", "compute_bound"]
-WorkloadScenario = Literal["cpu_contention", "transfer_bound", "compute_bound"]
+WorkloadScenario = Literal[
+    "cpu_contention", "transfer_bound", "compute_bound", "cnn_inference", "cnn_training"
+]
 
 
 class Model(BaseModel):
@@ -65,7 +68,7 @@ class TraceEvent(Model):
     def valid_interval(self):
         if self.end_ns < self.start_ns:
             raise ValueError("end_ns must be at least start_ns")
-        if self.kind in {"gpu_kernel", "memcpy"} and self.device_id is None:
+        if self.kind in GPU_ACTIVITY_KINDS and self.device_id is None:
             raise ValueError("GPU activity must identify its device")
         if self.source == "fixture" and self.confidence != "simulated":
             raise ValueError("Fixture events cannot be measured")
@@ -141,6 +144,12 @@ class Hypothesis(Model):
     ]
     statement: str = Field(min_length=1, max_length=2000)
     evidence_event_ids: list[Identifier] = Field(default_factory=list, max_length=100)
+    contradicting_event_ids: list[Identifier] = Field(default_factory=list, max_length=30)
+    supporting_metric_refs: list[Identifier] = Field(default_factory=list, max_length=12)
+    contradicting_metric_refs: list[Identifier] = Field(default_factory=list, max_length=12)
+    missing_metric_refs: list[Identifier] = Field(default_factory=list, max_length=12)
+    counterevidence_note: str = Field(default="", max_length=500)
+    testable_prediction: str = Field(default="", max_length=500)
     missing_evidence: list[str] = Field(default_factory=list, max_length=20)
     confidence: Literal["low", "medium", "high"] = "low"
 
@@ -153,6 +162,10 @@ class ExperimentPlan(Model):
 class AgentDecision(Model):
     hypotheses: list[Hypothesis] = Field(min_length=1, max_length=6)
     selected_experiment: ExperimentPlan | None = None
+    claim_scope: Literal["affinity_throughput"] | None = Field(
+        default=None,
+        description="Required for supported/rejected; scoped to measured affinity throughput.",
+    )
     decision: Literal["test", "supported", "rejected", "inconclusive"]
     rationale: str = Field(min_length=1, max_length=3000)
 
@@ -199,6 +212,7 @@ class CaptureRequest(Envelope):
     timeout_s: Annotated[int, Field(strict=True, ge=5, le=90)] = 60
     cuda_trace_mode: Literal["cuda", "cuda-sw"] = "cuda-sw"
     cpu_context_switches: bool = False
+    sudo_scheduler: bool = Field(default=False, strict=True)
     owner_approved: bool = Field(default=False, strict=True)
 
 
@@ -231,6 +245,7 @@ class BenchmarkTrial(Model):
     throughput_ops_s: float = Field(gt=0)
     cpu_set: list[NonNegativeInt]
     configuration: dict[str, Any]
+    validation: dict[str, Any] = Field(default_factory=dict)
     started_at: datetime | None = Field(
         default=None, description="Controller UTC time before child execution, including setup"
     )

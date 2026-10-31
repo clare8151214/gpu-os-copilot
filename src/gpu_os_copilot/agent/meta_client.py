@@ -31,8 +31,7 @@ class MetaClient:
             response = self.client.chat.completions.create(
                 model=self.config.model,
                 messages=messages,
-                tools=tools,
-                tool_choice="auto",
+                **({"tools": tools, "tool_choice": "auto"} if tools else {}),
                 max_completion_tokens=self.config.max_completion_tokens,
                 reasoning_effort=self.config.reasoning_effort,
             )

@@ -70,8 +70,10 @@ def setup(monkeypatch, tmp_path):
     return worker, request, measurement
 
 
-def test_capture_requires_approval_without_writes(setup, monkeypatch, tmp_path):
+@pytest.mark.parametrize("sudo_scheduler", [False, True])
+def test_capture_requires_approval_without_writes(setup, monkeypatch, tmp_path, sudo_scheduler):
     worker, request, _ = setup
+    request.sudo_scheduler = sudo_scheduler
     monkeypatch.setattr(
         "gpu_os_copilot.collectors.capture._run", lambda *args: pytest.fail("Spawned")
     )
@@ -128,6 +130,54 @@ def test_capture_timeout_keeps_failure_record(setup, monkeypatch, tmp_path):
     assert result.error_code == "CAPTURE_TIMEOUT"
     saved = json.loads((tmp_path / "report.capture/result.json").read_text())
     assert saved["status"] == "failed" and saved["trace"] is None
+
+
+def test_profiler_failure_retains_diagnostics_without_export(setup, monkeypatch, tmp_path):
+    worker, request, _ = setup
+    request.owner_approved = True
+    calls = []
+
+    def fail(argv, *args):
+        calls.append(argv[1])
+        raise RuntimeError("Profiled workload failed (exit code 139)")
+
+    monkeypatch.setattr("gpu_os_copilot.collectors.capture._run", fail)
+    result = worker.capture_trace(request, tmp_path / "report")
+    assert result.status == "failed" and result.trace is None
+    assert calls == ["profile"]
+    failure = json.loads((tmp_path / "report.capture/failure.json").read_text())
+    assert failure == {
+        "type": "RuntimeError",
+        "message": "Profiled workload failed (exit code 139)",
+    }
+
+
+@pytest.mark.parametrize("profiled", [False, True])
+def test_trace_file_budget_is_separate_from_timed_output(profiled, tmp_path):
+    # Exercise a real OS file limit in a child without importing Torch or using a GPU.
+    script = """
+import json, resource, sys
+from pathlib import Path
+from gpu_os_copilot.workloads.launch_test import set_resource_limits
+set_resource_limits(65536, profiled=sys.argv[1] == 'True')
+try:
+    Path(sys.argv[2]).write_bytes(b'x' * 70000)
+    outcome = 'written'
+except OSError:
+    outcome = 'file_limit'
+print(json.dumps({'outcome': outcome, 'file_limit': resource.getrlimit(resource.RLIMIT_FSIZE)}))
+"""
+    result = subprocess.run(
+        [sys.executable, "-c", script, str(profiled), str(tmp_path / "stream")],
+        check=True,
+        capture_output=True,
+        text=True,
+        timeout=5,
+    )
+    data = json.loads(result.stdout)
+    assert data["outcome"] == ("written" if profiled else "file_limit")
+    limit = 256 * 1024 * 1024 if profiled else 65536
+    assert data["file_limit"] == [limit, limit]
 
 
 def test_window_and_workload_evidence_must_match(setup, tmp_path):

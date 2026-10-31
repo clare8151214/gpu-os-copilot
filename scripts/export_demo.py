@@ -6,12 +6,13 @@ import json
 from pathlib import Path
 
 from gpu_os_copilot.agent.tools import ToolExecutor
+from gpu_os_copilot.analysis.metrics import summarize
 from gpu_os_copilot.experiments.compare import compare_trials
 from gpu_os_copilot.schemas import ExperimentResult, TraceBundle
 from gpu_os_copilot.worker.local import LocalWorker
 
 
-def export(root: Path, output: Path) -> None:
+def export(root: Path, output: Path, trace_overrides: Path | None = None) -> None:
     scenarios = []
     traces = {}
     for scenario, prefix in (
@@ -43,6 +44,8 @@ def export(root: Path, output: Path) -> None:
             raise ValueError("Saved comparison does not match individual trials")
         trace_prefix = "cpu_baseline" if prefix == "cpu" else prefix
         trace_path = root / f"measured/{trace_prefix}.capture/trace.json"
+        if trace_overrides is not None:
+            trace_path = trace_overrides / f"{trace_prefix}-trace.json"
         trace = TraceBundle.model_validate_json(trace_path.read_text())
         executor = ToolExecutor(LocalWorker(), trace)
         if not executor.workload_bound() or trace.configuration["scenario"] != scenario:
@@ -55,7 +58,7 @@ def export(root: Path, output: Path) -> None:
         ]
         traces[scenario] = trace.model_dump(mode="json")
         decision = report["agent"]["decision"]
-        summary = report["summary"]
+        summary = summarize(trace).model_dump(mode="json")
         scenarios.append(
             {
                 "scenario": scenario,
@@ -79,6 +82,7 @@ def export(root: Path, output: Path) -> None:
                 "rules": [hypothesis["category"] for hypothesis in report["hypotheses"]],
                 "meta": {
                     "model": rows[0]["model"],
+                    "recorded_input_gpu_idle_fraction": report["summary"]["gpu_idle_fraction"],
                     "input_confidence": report["agent"]["input_confidence"],
                     "tools": [row["request"]["name"] for row in calls],
                     "decision": decision["decision"],
@@ -112,6 +116,7 @@ def export(root: Path, output: Path) -> None:
             "Scenarios are explicitly labeled: this is not a blinded diagnosis evaluation.",
             "No measured AI superiority or whole-device utilization claim.",
             "Raw captures and full local audits are excluded; exports omit process identities.",
+            "Trace metrics recomputed; Meta choices refer to their recorded original inputs.",
         ],
         "scenarios": scenarios,
     }
@@ -126,5 +131,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--artifacts", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument(
+        "--trace-overrides",
+        type=Path,
+        help="Directory of explicitly reimported <prefix>-trace.json files",
+    )
     args = parser.parse_args()
-    export(args.artifacts, args.output)
+    export(args.artifacts, args.output, args.trace_overrides)

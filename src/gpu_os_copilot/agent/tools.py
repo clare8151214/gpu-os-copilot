@@ -4,6 +4,7 @@ from uuid import uuid4
 from pydantic import Field, ValidationError
 
 from gpu_os_copilot.analysis.metrics import summarize
+from gpu_os_copilot.analysis.scheduling_study import READ_TOOL, SchedulingStudy
 from gpu_os_copilot.experiments.compare import compare_trials
 from gpu_os_copilot.schemas import (
     EventKind,
@@ -15,7 +16,7 @@ from gpu_os_copilot.schemas import (
     TraceBundle,
 )
 from gpu_os_copilot.worker.protocol import Worker
-from gpu_os_copilot.workloads.launch_test import SCENARIO_SHAPES, WORKLOAD_VERSION
+from gpu_os_copilot.workloads.specs import SCENARIO_SHAPES, expected_configuration
 
 
 class SummaryArgs(Model):
@@ -23,7 +24,7 @@ class SummaryArgs(Model):
 
 
 class TimelineArgs(SummaryArgs):
-    event_types: list[EventKind] = Field(min_length=1, max_length=6)
+    event_types: list[EventKind] = Field(min_length=1, max_length=7)
     limit: Annotated[int, Field(strict=True, ge=1, le=100)] = 20
 
 
@@ -76,27 +77,58 @@ class ToolExecutor:
         *,
         owner_approved: bool = False,
         max_experiments: int = 2,
+        scheduling_study: SchedulingStudy | None = None,
     ):
         self.worker, self.trace = worker, trace
         self.owner_approved = owner_approved
         self.max_experiments = max_experiments
         self.experiment_count = 0
         self.results = []
+        if scheduling_study is not None and not scheduling_study.matches(trace):
+            raise ValueError("Scheduling study does not match the diagnosis input")
+        self.scheduling_study = scheduling_study
+        self.scheduling_read = False
+
+    def tool_schemas(self):
+        schemas = tool_schemas()
+        if self.scheduling_study is not None:
+            schemas.append(
+                {
+                    "type": "function",
+                    "function": {
+                        "name": READ_TOOL,
+                        "description": "Read separate recorded profiled CPU scheduling pairs, "
+                        "their variation and clock limits. No new experiment. "
+                        "Does not establish GPU idle causality or unprofiled throughput gains.",
+                        "parameters": EmptyArgs.model_json_schema(),
+                    },
+                }
+            )
+        return schemas
+
+    def additional_metrics(self):
+        return (
+            self.scheduling_study.metrics(consumed=self.scheduling_read)
+            if self.scheduling_study
+            else {}
+        )
+
+    def scheduling_evidence(self):
+        if self.scheduling_study is None:
+            return None
+        if not self.scheduling_read:
+            return {
+                "status": "unread",
+                "instruction": "No scheduling intervention result consumed.",
+            }
+        return self.scheduling_study.assess()
 
     def workload_bound(self) -> bool:
         config = self.trace.configuration
         scenario = config.get("scenario")
         if not isinstance(scenario, str) or scenario not in SCENARIO_SHAPES:
             return False
-        expected = {
-            "workload_version": WORKLOAD_VERSION,
-            "shape": list(SCENARIO_SHAPES[scenario]),
-            "seed": 42,
-            "dtype": "float32",
-            "warmup": 10,
-            "operations": 200,
-            "synchronized": True,
-        }
+        expected = expected_configuration(scenario)
         return (
             self.trace.workload_id == "launch_test"
             and self.trace.provenance.confidence == "measured"
@@ -123,6 +155,22 @@ class ToolExecutor:
         )
 
     def execute(self, name: str, arguments: str) -> dict:
+        if name == READ_TOOL and self.scheduling_study is not None:
+            try:
+                if len(arguments) > 8192:
+                    return {"error_code": "ARGUMENT_BUDGET_EXCEEDED"}
+                EmptyArgs.model_validate_json(arguments)
+                if self.scheduling_read:
+                    return {"error_code": "COMPARISON_ALREADY_CONSUMED"}
+                result = self.scheduling_study.assess()
+                self.scheduling_read = True
+                return {
+                    "schema_version": "1.0",
+                    "result": result,
+                    "catalog_metrics": self.additional_metrics(),
+                }
+            except (ValidationError, ValueError, KeyError, TypeError):
+                return {"schema_version": "1.0", "error_code": "INVALID_TOOL_ARGUMENTS"}
         if name not in ARGUMENTS:
             return {"schema_version": "1.0", "error_code": "TOOL_NOT_ALLOWLISTED"}
         if len(arguments) > 8192:
@@ -231,6 +279,14 @@ class ToolExecutor:
             )
             for r in self.results
         )
+
+    def comparison_evidence(self):
+        # Each run result (including its trials) was returned to the model. Keep failed
+        # batches as evidence of insufficient verification rather than selecting successes.
+        return [result.model_copy(deep=True) for result in self.results]
+
+    def unread_comparison_count(self):
+        return 0
 
     def compact_summary(self) -> dict:
         summary = summarize(self.trace).model_dump(mode="json")

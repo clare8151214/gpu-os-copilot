@@ -111,10 +111,13 @@ def test_meta_sdk_round_trip_without_network(monkeypatch, load_fixture, worker, 
         def create(self, **kwargs):
             seen.append(kwargs)
             assert kwargs["model"] == "muse-spark-1.3"
-            assert kwargs["tool_choice"] == "auto"
+            if len(seen) < 3:
+                assert kwargs["tools"] and kwargs["tool_choice"] == "auto"
+            else:
+                assert "tools" not in kwargs and "tool_choice" not in kwargs
             assert kwargs["max_completion_tokens"] == 3072
             assert kwargs["reasoning_effort"] == "low"
-            response = fake.complete(kwargs["messages"], kwargs["tools"])
+            response = fake.complete(kwargs["messages"], kwargs.get("tools", []))
             if len(seen) > 1:
                 messages = kwargs["messages"]
                 for index, message in enumerate(messages):
@@ -148,7 +151,7 @@ def test_meta_sdk_round_trip_without_network(monkeypatch, load_fixture, worker, 
 
     monkeypatch.setattr(openai, "OpenAI", SDK)
     monkeypatch.setenv("MODEL_API_KEY", "test-only-secret")
-    config = AgentConfig(max_completion_tokens=3072, reasoning_effort="low")
+    config = AgentConfig(max_steps=3, max_completion_tokens=3072, reasoning_effort="low")
     client = MetaClient(config, allow_paid_api=True)
     result = run_agent(client, ToolExecutor(worker, trace), config, tmp_path)
     assert len(seen) == 3
@@ -315,7 +318,7 @@ def test_live_experiment_requires_exact_workload_and_environment(
 def test_step_and_tool_budgets(load_fixture, worker, tmp_path):
     executor = ToolExecutor(worker, load_fixture())
     call = tool_call("one", "list_available_experiments", {})
-    with pytest.raises(CopilotError, match="STEP_BUDGET"):
+    with pytest.raises(CopilotError, match="FINAL_RESPONSE_REQUIRED"):
         run_agent(
             ScriptedClient({"tool_calls": [call]}), executor, AgentConfig(max_steps=1), tmp_path
         )

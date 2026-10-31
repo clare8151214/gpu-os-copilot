@@ -38,6 +38,29 @@ def test_default_dry_run_never_spawns(setup, monkeypatch):
     assert not (worker.artifact_dir / "experiments").exists()
 
 
+@pytest.mark.parametrize("scenario", ["cnn_inference", "cnn_training"])
+@pytest.mark.parametrize("valid", [True, False])
+def test_model_trials_require_validated_outputs(setup, monkeypatch, scenario, valid):
+    from gpu_os_copilot.workloads.specs import expected_configuration
+
+    worker, request = setup
+    request.owner_approved = True
+    request.scenario = scenario
+    raw = {
+        "wall_time_ms": 10,
+        "operation_count": 200,
+        "configuration": expected_configuration(scenario),
+        "validation": {"validated": valid, "output_shape": [32, 10]},
+    }
+    monkeypatch.setattr("gpu_os_copilot.experiments.affinity._invoke", lambda *a, **kw: raw)
+    result = worker.run_experiment(request)
+    assert result.status == ("ok" if valid else "failed")
+    if valid:
+        assert all(t.validation["output_shape"] == [32, 10] for t in result.trials)
+    else:
+        assert result.trials == []
+
+
 @pytest.mark.parametrize(
     "change",
     [

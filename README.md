@@ -101,7 +101,11 @@ Add `--capture-complete` only when the capture contains all relevant workload GP
 within that window. Otherwise, GPU idle fraction is reported as unavailable. Use `--simulated`
 when importing a synthetic SQLite file.
 
-SQLite import reads supported CUDA runtime, kernel and memory-copy events. CPU scheduling
+SQLite import reads supported CUDA runtime, kernel, memory-copy and memory-set events.
+GPU busy time uses their interval union across streams. Nonempty unsupported activity tables
+make the trace partial, even with `--capture-complete`, so missing activity cannot appear as idle.
+New exports may contain `memset` events; upgrade older readers before analyzing those exports.
+CPU scheduling
 events and memory-copy directions are not decoded from SQLite; missing information is shown
 in the report. CUDA launch delays alone do not establish CPU scheduling delays.
 
@@ -126,6 +130,79 @@ your installed Nsight version does not support that option. CPU context-switch c
 optional via `--cpu-context-switches`; scheduling-delay analysis remains unavailable for
 SQLite inputs. Existing capture paths are never overwritten: choose a new output prefix.
 Use `--scenario transfer_bound` or `--scenario compute_bound` to capture the other workloads.
+
+For a Linux host that supports scheduler events through tracefs, an optional helper can collect
+the bundled workload's threads alongside CUDA, including the training autograd launcher:
+
+```bash
+gpu-os-copilot trace --out artifacts/traces/scheduled --sudo-scheduler
+gpu-os-copilot trace --out artifacts/traces/scheduled --sudo-scheduler --confirm
+```
+
+Review the plan first. `--sudo-scheduler` explicitly permits a short-lived root helper through
+noninteractive sudo; the profiler and workload still run as your normal user. The helper uses
+a private tracefs instance with thread filters and removes it after collection. At most 32
+threads of the workload are enrolled after warmup; their names are temporarily replaced with
+unique identifiers until the workload exits. The helper verifies ownership, process membership,
+start times and kernel IDs before and after collection, using `/sys/kernel/debug/sched/debug`
+for PID namespaces. Each observed CUDA API thread needs its own switch and wakeup evidence;
+late or unverified threads remain explicitly uncovered.
+It does not change system-wide tracing settings, sysctls or directory permissions. Unsupported
+events or permissions cause capture failure with retained logs. This mode cannot be combined
+with `--cpu-context-switches`.
+
+Runnable intervals are accepted only when the launch PID/TID matches, no events were lost,
+the capture covers the measurement window and five clock markers validate the timestamp
+offset and clock-rate conversion. The report records alignment uncertainty and the assumed
+linear clock relation between samples. Sleep intervals are not counted as runnable
+delay; measured overlap still does not establish a sole cause of GPU inactivity.
+
+After capturing baseline and treatment with the same workload and instrumentation, compare
+their aligned scheduling delay, overlap and GPU idle fraction from this checkout:
+
+```bash
+python scripts/compare_scheduler.py \
+  --baseline artifacts/traces/baseline.capture/trace.json \
+  --treatment artifacts/traces/treatment.capture/trace.json \
+  --out artifacts/traces/scheduler-comparison.json
+```
+
+The comparison requires complete, aligned evidence and verifies that only launcher placement
+changed. It reports two profiled observations; use the separate repeated experiment command
+to evaluate throughput without profiler overhead.
+
+For repeated CPU scheduling comparisons, create a JSON manifest alongside the recorded
+captures. Include every planned pair, using `null` for a capture that was not obtained:
+
+```json
+{
+  "pairs": [
+    {
+      "batch": "batch-1",
+      "baseline": "baseline.capture/trace.json",
+      "treatment": "treatment.capture/trace.json"
+    }
+  ]
+}
+```
+
+Paths must stay within the manifest directory. The reader accepts up to 12 pairs, 32 MiB per
+trace and 128 MiB in total. Both arms require matching workload/software settings, controlled
+placement, complete observed CUDA-thread coverage, zero trace loss and reproducible five-point
+CPU clock calibration. Missing or invalid pairs remain visible and withhold aggregate effects.
+
+```bash
+gpu-os-copilot diagnose --trace artifacts/traces/baseline.capture/trace.json \
+  --scheduler-study artifacts/traces/study.json --mode rules --json
+```
+
+This reads saved files only. It reports CPU wait differences, paired variation and profiled
+throughput separately from GPU timing. A consistent CPU-delay direction requires at least five
+valid pairs across three batches, with every difference exceeding its conditional clock-error
+bound. These descriptive checks do not establish statistical significance or GPU idle causation.
+With the Meta options below, the same flag offers a read-only scheduling tool; its numerical
+results become available for model citations only after the model reads them. They do not
+count as unprofiled throughput trials or authorize new captures.
 
 ## Connect a Meta model
 
@@ -156,6 +233,14 @@ files are not loaded automatically.
 
 Use the same `--mode meta --allow-paid-api` options with `diagnose` to analyze your own trace.
 Agent runs save tool calls and decisions as JSONL files under `artifacts/agent/`.
+The JSON report separates the model's `proposed_decision` from the verified `decision`.
+A deterministic critic recomputes consumed benchmark batches and records its reasons in
+`verification`; it does not make additional model calls. Cited events must have been provided
+to the model and must overlap the observation window on the selected device.
+The `investigation` section lists ranked candidate explanations with supporting and
+contradicting metric/event references, missing telemetry and testable predictions. Numerical
+facts come from the trace; model prose remains an interpretation. Insufficient evidence can
+produce an explicit unknown diagnosis.
 
 To let the agent run a bounded experiment on a trace captured by this tool:
 
@@ -168,10 +253,36 @@ The agent can inspect evidence, choose a relevant experiment, and interpret repe
 Live experiments require matching bundled-workload metadata; an arbitrary imported trace is
 not enough to authorize a comparison for a different workload. Negative controls may lead
 the agent to skip an unnecessary experiment.
+Before live execution, the agent proposes a plan with possible outcomes, expected information
+gain and bounded cost. The controller checks the plan against available CPUs, workload and
+environment, remaining budget and existing evidence. A changed or unapproved plan cannot run.
+Recorded comparison reads require no new GPU execution. Reports distinguish plans from
+consumed actions in `planning`, including abstention and any unexecuted pending action.
+
+Accepting an affinity throughput improvement requires at least two distinct, compatible
+batches with five trials per condition, an improvement of at least 5% in every batch,
+nonoverlapping observed timing ranges, and a smallest effect at least half the largest.
+Consistent regressions use the same conservative checks in the opposite direction. Small,
+conflicting, incomplete or unread comparisons keep the result `inconclusive`. These are
+descriptive checks, not statistical significance, equivalence, or proof of a causal bottleneck.
+
+From a source checkout, reassess a saved proposal without API calls or new experiments:
+
+```bash
+python scripts/critic_replay.py --trace artifacts/traces/baseline.capture/trace.json \
+  --proposal artifacts/agent-report.json \
+  --batch artifacts/experiments/batch-1/result.json \
+  --batch artifacts/experiments/batch-2/result.json --out artifacts/reassessment.json
+```
 
 If a response is cut short, `AGENT_RESPONSE_TRUNCATED` stops the run without executing partial
 tool calls. Adjust `META_MAX_COMPLETION_TOKENS` or `META_REASONING_EFFORT` before retrying;
 reasoning and visible output share the completion-token budget.
+`META_MAX_TOTAL_COMPLETION_TOKENS` limits cumulative reserved output capacity, while
+`META_MAX_REQUEST_BYTES` and `META_MAX_SESSION_REQUEST_BYTES` bound serialized input per request
+and session. The controller reserves the full per-response output limit before each call,
+even if earlier responses used fewer tokens. `model_budget` reports both these reservations
+and provider-reported usage; missing usage and dollar cost remain explicitly unknown.
 
 ## Compare CPU placement settings
 
@@ -211,17 +322,54 @@ the launcher CPU placement changes.
 These timings describe the bundled workload. They do not establish the cause of a slowdown
 in a different application or measure GPU idle intervals after the intervention.
 
+### Exercise a training or inference model
+
+Use `cnn_inference` or `cnn_training` for a small image classifier with actual convolutional
+forward passes; training also runs cross-entropy, backpropagation and SGD. Both use batches
+of 32 seeded synthetic RGB images already on the GPU, with fixed warm-up and 200 measured
+batches. Output checks verify finite values and whether parameters changed as expected.
+These workloads measure model execution under controlled CPU contention, not dataset loading,
+model accuracy or production traffic.
+
+```bash
+gpu-os-copilot experiment --scenario cnn_training --cpus 2 --repeats 5 --timeout 120
+gpu-os-copilot experiment --scenario cnn_training --cpus 2 --repeats 5 --timeout 120 --confirm
+```
+
+Choose a treatment CPU from your available affinity set; CPU 2 is only an example. Check
+CPU topology because different logical CPU IDs can share a core. To retain variation across
+multiple batches for both models, run the study script from this checkout:
+
+```bash
+python scripts/model_study.py --out artifacts/model-study --treatment-cpu 2 --batches 3
+python scripts/model_study.py --out artifacts/model-study --treatment-cpu 2 --batches 3 --confirm
+```
+
+The plan shows resource and time bounds before execution. A new output directory is required;
+it retains all trials, per-batch ranges and standard deviations, and the range of batch effects.
+An improvement in one environment is not a guarantee for a different application or host.
+
 ## Read the results
 
 - **Measurements:** timing summaries computed from the supplied trace and observation window.
   GPU idle fraction refers to captured activity for that workload and device.
 - **Candidate explanations:** interpretations of the evidence, with confidence labels and
   missing-data notes. A candidate is not a confirmed cause.
-- **Agent decisions:** tool-driven conclusions. `inconclusive` means the available evidence
-  does not support accepting or rejecting the hypothesis.
+- **Agent decisions:** verified decisions about the recorded affinity throughput effect.
+  `inconclusive` means the evidence does not meet the verification policy. Hypotheses remain
+  candidate explanations; no decision establishes CPU scheduling as the sole cause.
 
-Use `--json` with `demo-fixture` or `diagnose` for machine-readable output. Add `--help` to
-any command to see its options:
+Use `--json` with `demo-fixture` or `diagnose` for machine-readable output.
+
+The JSON `observability` section reports how many observed CUDA API threads have validated
+scheduling coverage, how many GPU activities have unambiguous API links, and why others remain
+unlinked. GPU events preceding their submitting API, or missing correlation evidence, suppress
+CPU/GPU overlap measurements. Passing this check does not independently calibrate GPU clocks.
+Where scheduling calibration and correlation checks pass, conditional overlap bounds reflect
+scheduler timestamp uncertainty. They exclude GPU/CPU conversion error, unobserved threads and
+profiler overhead; they are not statistical confidence intervals or proof of cause.
+
+Add `--help` to any command to see its options:
 
 ```bash
 gpu-os-copilot --help
