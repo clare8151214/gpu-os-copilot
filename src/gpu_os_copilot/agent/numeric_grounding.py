@@ -6,6 +6,7 @@ Spelled-out quantities and qualitative statements remain unverified interpretati
 
 import math
 import re
+import unicodedata
 from copy import deepcopy
 
 from pydantic import ValidationError
@@ -131,7 +132,9 @@ def ground_narrative(decision: AgentDecision, catalog: dict, *, visible_ids=()):
             errors.append({"field": path, "code": "MALFORMED_NUMERIC_REFERENCE"})
         if identifiers:
             rest = identifiers.sub("", rest)
-        if any(char.isnumeric() for char in rest):
+        # Unicode numeric characters include digits and fractions. Chinese number words
+        # are letters, as are English number words; e.g. 一 in 一致 is not a numeral literal.
+        if any(unicodedata.category(char).startswith("N") for char in rest):
             errors.append({"field": path, "code": "NUMERIC_LITERAL_REQUIRES_REFERENCE"})
     result = None
     if not errors:

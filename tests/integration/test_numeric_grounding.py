@@ -137,6 +137,23 @@ def test_no_numeric_references_does_not_mean_prose_is_verified(catalog):
     assert any("Spelled-out" in limit for limit in check["limitations"])
 
 
+def test_qualitative_chinese_words_are_not_mistaken_for_numeric_literals(catalog):
+    decision = proposal("資料一致，但原因不明。")
+    rendered, check = ground_narrative(decision, catalog)
+    assert rendered == decision
+    assert check["status"] == "no_references"
+    assert check["narrative_semantics"] == "not_verified"
+
+
+def test_rendering_cannot_expand_prose_beyond_its_schema_limit(catalog):
+    catalog["metrics"]["large"] = {"value": 10**100, "unit": "events", "available": True}
+    decision = proposal()
+    decision.hypotheses[0].statement = "X" * 1980 + "{{metric:large}}"
+    rendered, check = ground_narrative(decision, catalog)
+    assert rendered is None
+    assert check["errors"] == [{"code": "NUMERIC_RENDER_EXCEEDS_FIELD_LIMIT"}]
+
+
 class Responses:
     mode = "mock"
 
