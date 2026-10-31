@@ -286,7 +286,9 @@ def test_feedback_and_final_downgrade_fit_original_budget(measured_trace, tmp_pa
     )
     assert "EFFECT_SIZE_UNSTABLE" in feedback["reason_codes"]
     rows = [json.loads(line) for line in Path(report["audit_path"]).read_text().splitlines()]
-    assert rows[-2]["kind"] == "verification" and rows[-1]["kind"] == "decision"
+    assert [row["kind"] for row in rows[-3:]] == ["verification", "numeric_grounding", "decision"]
+    assert report["numeric_grounding"]["model_rationale_replaced_by_critic"]
+    assert "9999" not in report["decision"]["rationale"]
     assert "private-batch" not in json.dumps(client.messages)
 
 
@@ -312,6 +314,8 @@ def test_timeline_read_makes_window_event_citable(measured_trace, tmp_path):
     ex = BlindExecutor(measured_trace, batch(measured_trace, 1), case_id="case-test")
     event = min((e for e in ex.trace.events if e.kind == "gpu_kernel"), key=lambda e: e.start_ns)
     event.kind = "other"  # Only the requested timeline response reveals this event.
+    conclusion = proposal("inconclusive", ids=[event.id])
+    conclusion.rationale = "The inspected event is available; causality remains unknown."
     client = OfflineScript(
         [
             {
@@ -327,7 +331,7 @@ def test_timeline_read_makes_window_event_citable(measured_trace, tmp_path):
                     )
                 ]
             },
-            {"content": proposal("inconclusive", ids=[event.id]).model_dump_json()},
+            {"content": conclusion.model_dump_json()},
         ]
     )
     report = run_agent(client, ex, AgentConfig(max_steps=2), tmp_path)

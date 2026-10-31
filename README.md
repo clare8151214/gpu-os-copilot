@@ -247,6 +247,17 @@ contradicting metric/event references, missing telemetry and testable prediction
 facts come from the trace; model prose remains an interpretation. Insufficient evidence can
 produce an explicit unknown diagnosis.
 
+Final narrative numbers are inserted from consumed evidence references, such as
+`{{metric:cpu_runnable_delay_ms}}` or `{{percent:gpu_idle_fraction}}`. Count ratios use
+`{{ratio:profiled_gpu_api_contradictory_pair_count:profiled_scheduling_pair_count}}`.
+The controller checks availability, units and count scope, and asks for a correction when a
+reply copies literal numbers or references unavailable data. Corrections use the existing
+response budget; an unresolved numeric error fails the run instead of publishing that conclusion.
+The `numeric_grounding` report records the source values and rendered references. The original
+proposal remains in `proposed_decision` and the audit. Reference checks do not verify the meaning
+of prose, spelled-out quantities or causal interpretations; `no_references` is not a factual
+accuracy score. Benchmark statistics remain separately available in `verification`.
+
 To let the agent run a bounded experiment on a trace captured by this tool:
 
 ```bash

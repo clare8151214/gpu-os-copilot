@@ -13,6 +13,8 @@ from gpu_os_copilot.agent.budget import ModelBudget
 from gpu_os_copilot.agent.critic import assess_batches, policy, verify_decision
 from gpu_os_copilot.agent.evidence_access import assess_evidence_access, unread_opportunities
 from gpu_os_copilot.agent.investigator import evidence_catalog, validate_investigation
+from gpu_os_copilot.agent.numeric_grounding import INSTRUCTION as NUMERIC_INSTRUCTION
+from gpu_os_copilot.agent.numeric_grounding import ground_narrative
 from gpu_os_copilot.agent.planner import ExperimentPlanner, plan_schema
 from gpu_os_copilot.agent.tools import ToolExecutor, tool_schemas
 from gpu_os_copilot.analysis.scheduling_study import READ_TOOL
@@ -116,6 +118,8 @@ def run_agent(client, executor: ToolExecutor, config: AgentConfig, audit_dir: Pa
                 "metrics are unknown, not zero. Supporting events use evidence_event_ids; "
                 "counterevidence uses contradicting_event_ids. Keep explanations concise. "
                 "Every hypothesis is provisional, never a confirmed or sole cause. "
+                + NUMERIC_INSTRUCTION
+                + " "
                 + scheduling_instruction
                 + "An availability_state of unread means a recorded tool is offered, not that "
                 "the measurement is unavailable. Before stopping, read it if it could resolve "
@@ -328,6 +332,35 @@ def run_agent(client, executor: ToolExecutor, config: AgentConfig, audit_dir: Pa
                         unread_comparisons=executor.unread_comparison_count(),
                     )
                     record("verification", proposed_decision=proposed, verification=verification)
+                    grounded, numeric = ground_narrative(decision, catalog, visible_ids=visible_ids)
+                    numeric["scope"] = (
+                        "Effective decision after deterministic throughput verification"
+                    )
+                    numeric["model_rationale_replaced_by_critic"] = (
+                        decision.rationale != proposed["rationale"]
+                    )
+                    record("numeric_grounding", assessment=numeric, proposed_decision=proposed)
+                    if grounded is None:
+                        if final_response:
+                            raise CopilotError("AGENT_NUMERIC_GROUNDING_INVALID")
+                        messages.extend(
+                            [
+                                {"role": "assistant", "content": message.get("content")},
+                                {
+                                    "role": "user",
+                                    "content": json.dumps(
+                                        {
+                                            "numeric_grounding_feedback": numeric,
+                                            "instruction": NUMERIC_INSTRUCTION,
+                                            "remaining_responses": budget.feedback_capacity(),
+                                            "budget_increase": False,
+                                        }
+                                    ),
+                                },
+                            ]
+                        )
+                        continue
+                    decision = grounded
                     record("decision", decision=decision.model_dump())
                     return {
                         "schema_version": "1.0",
@@ -337,6 +370,7 @@ def run_agent(client, executor: ToolExecutor, config: AgentConfig, audit_dir: Pa
                         "proposed_decision": proposed,
                         "verification": verification,
                         "investigation": investigation,
+                        "numeric_grounding": numeric,
                         "evidence_access": access,
                         "planning": planner.report(),
                         "model_budget": budget.report(),
