@@ -108,6 +108,7 @@ def test_ranked_diagnosis_links_both_sides_to_application_computed_facts(load_fi
         ("duplicate", "DUPLICATE_HYPOTHESIS_CATEGORY"),
         ("high_confidence", "HIGH_CONFIDENCE_WITH_INCOMPLETE_EVIDENCE"),
         ("single", "RANK_TWO_OR_THREE_COMPETING_HYPOTHESES_OR_EXPLICIT_UNKNOWN"),
+        ("ungrounded", "HYPOTHESIS_HAS_NO_EVIDENCE_OR_EXPLICIT_LIMITATION"),
     ],
 )
 def test_bad_investigations_get_specific_feedback(load_fixture, mutation, code):
@@ -133,7 +134,34 @@ def test_bad_investigations_get_specific_feedback(load_fixture, mutation, code):
         first.confidence = "high"  # Simulated fixture cannot substantiate this claim.
     elif mutation == "single":
         decision.hypotheses = [first]
+    elif mutation == "ungrounded":
+        first.supporting_metric_refs = []
     assert code in validate_investigation(decision, catalog)["error_codes"]
+
+
+@pytest.mark.parametrize("field", ["contradicting_metric_refs", "contradicting_event_ids"])
+def test_alternative_grounded_only_in_counterevidence_is_valid(load_fixture, field):
+    """Live v8/v9/v2 rejected a ruled-out transfer alternative citing only counterevidence."""
+    trace = load_fixture()
+    catalog = evidence_catalog(trace)
+    decision = candidates()
+    ruled_out = Hypothesis(
+        category="data_transfer",
+        statement="Transfer stalls as an alternative explanation for GPU idle.",
+        counterevidence_note="Measured transfer activity contradicts a transfer-bound cause.",
+        testable_prediction="Changing transfer overlap would not alter wall time.",
+        confidence="low",
+    )
+    setattr(
+        ruled_out,
+        field,
+        ["transfer_busy_fraction"]
+        if field == "contradicting_metric_refs"
+        else [catalog["event_samples"][0]["id"]],
+    )
+    decision.hypotheses.append(ruled_out)
+    check = validate_investigation(decision, catalog)
+    assert check["status"] == "valid", check["error_codes"]
 
 
 class Responses:

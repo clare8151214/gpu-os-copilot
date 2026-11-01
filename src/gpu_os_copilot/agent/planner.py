@@ -166,6 +166,21 @@ class ExperimentPlanner:
             ),
         }
 
+    def optional_reads(self):
+        """Offered, unread affinity replay tools and the policy status that governs them.
+
+        Derived from planner-observed consumption so every executor, including frozen
+        evaluation harnesses, reports the same opportunities.
+        """
+        consumed = {a["action"] for a in self.actions if a["status"] == "consumed"}
+        if getattr(self.executor, "prior_decision", None) is not None:
+            consumed.add("read_recorded_comparison")
+        unread = sorted((AFFINITY_READS & self.tool_names) - consumed)
+        if not unread or not self.executor.unread_comparison_count():
+            return {}
+        status = self.recorded_read_policy()["status"]
+        return {name: status for name in unread}
+
     def propose(
         self,
         arguments,
@@ -219,6 +234,7 @@ class ExperimentPlanner:
                 self.catalog,
                 self.tool_names,
                 can_read_and_finish=remaining_responses >= 2 and remaining_tool_calls >= 1,
+                optional_reads=self.optional_reads(),
             )
             issues.extend(access["error_codes"])
         elif args.deferred_evidence:

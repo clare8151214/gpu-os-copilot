@@ -143,3 +143,68 @@ def test_offline_blinded_tool_roundtrip_before_live_api(load_fixture, tmp_path):
 
     result = run_agent(OfflineClient(), ex, AgentConfig(), tmp_path)
     assert result["mode"] == "mock" and result["tool_calls"] == 1
+
+
+def test_live_low_value_affinity_deferrals_get_accurate_feedback(load_fixture, tmp_path):
+    """Replays the first live-v7 compute-control deferrals (fee6c301, 7a2c66a runtime)."""
+    from gpu_os_copilot.agent.runner import run_agent
+    from gpu_os_copilot.config import AgentConfig
+
+    trace, recorded = evidence(lambda: load_fixture("compute_bound"))
+    ex = BlindExecutor(
+        trace,
+        recorded,
+        case_id="case-test",
+        repeated=recorded.model_copy(update={"experiment_id": "later-batch"}),
+    )
+    hypotheses = [
+        {
+            "category": "gpu_compute",
+            "statement": "Dense captured GPU activity is a provisional compute symptom.",
+            "supporting_metric_refs": ["gpu_idle_fraction"],
+            "counterevidence_note": "No affinity batch consumed.",
+            "testable_prediction": "Placement changes leave throughput unchanged.",
+        },
+        {
+            "category": "launch_overhead",
+            "statement": "Host launch cost may still contribute.",
+            "supporting_metric_refs": ["cuda_api_duration_ms"],
+            "counterevidence_note": "Low idle fraction argues against a host-side limit.",
+            "testable_prediction": "Fewer launches would not change throughput much.",
+        },
+    ]
+
+    def decision(reason):
+        return json.dumps(
+            {
+                "hypotheses": hypotheses,
+                "decision": "inconclusive",
+                "deferred_evidence": [
+                    {"tool_name": name, "reason": reason, "rationale": "Low-value policy."}
+                    for name in ["read_recorded_comparison", "read_repeated_comparisons"]
+                ],
+                "rationale": "Affinity throughput effect was not measured.",
+            }
+        )
+
+    class ReplayClient:
+        mode = "mock"
+        seen = []
+
+        def complete(self, messages, tools):
+            self.seen.append(
+                [json.loads(m["content"]) for m in messages[2:] if m["role"] == "user"]
+            )
+            reason = "insufficient_budget" if len(self.seen) == 1 else "low_information_value"
+            return {"message": {"content": decision(reason)}}
+
+    client = ReplayClient()
+    result = run_agent(client, ex, AgentConfig(), tmp_path)
+    opportunities = client.seen[0][-1]["controller_state"]["unread_evidence_opportunities"]
+    assert opportunities["read_recorded_comparison"]["read_policy_status"] == "low_value"
+    assert {"read_recorded_comparison", "read_repeated_comparisons"} <= set(opportunities)
+    feedback = client.seen[1][-2]["evidence_access_feedback"]
+    assert feedback["error_codes"] == ["EVIDENCE_READ_STILL_FITS_BUDGET"]
+    assert "DEFERRAL_NOT_AN_OFFERED_UNREAD_TOOL" not in json.dumps(feedback)
+    assert len(result["decision"]["deferred_evidence"]) == 2
+    assert result["decision"]["decision"] == "inconclusive"

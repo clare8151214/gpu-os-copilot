@@ -170,6 +170,7 @@ class EvidenceDeferral(Model):
         "not_relevant",
         "existing_evidence_sufficient",
         "measurement_scope_mismatch",
+        "low_information_value",
         "insufficient_budget",
     ]
     rationale: str = Field(min_length=1, max_length=500, pattern=r"\S")
@@ -194,7 +195,8 @@ class AgentDecision(Model):
         default_factory=list,
         max_length=8,
         description="Explicitly explain any offered unread evidence tool you choose to skip. "
-        "Unread evidence is not unavailable measurement. Do not defer an already consumed tool.",
+        "Unread evidence is not unavailable measurement. Do not defer an already consumed tool. "
+        "Use insufficient_budget only when the read and conclusion no longer fit.",
     )
     rationale: str = Field(min_length=1, max_length=3000)
 

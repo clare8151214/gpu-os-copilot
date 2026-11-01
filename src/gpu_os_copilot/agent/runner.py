@@ -124,6 +124,8 @@ def run_agent(client, executor: ToolExecutor, config: AgentConfig, audit_dir: Pa
                 + "An availability_state of unread means a recorded tool is offered, not that "
                 "the measurement is unavailable. Before stopping, read it if it could resolve "
                 "your missing evidence, or use deferred_evidence to explain why you skip it. "
+                "Optional unread affinity reads may also be disclosed there; use "
+                "low_information_value when the recorded-read policy rates them low value. "
                 "Do not treat defects of the input GPU timeline as defects of unread separate "
                 "CPU captures. Use catalog counts rather than recounting study rows in prose. "
                 + "Use plan_next_action when planning an action, weighing information gain against "
@@ -195,7 +197,7 @@ def run_agent(client, executor: ToolExecutor, config: AgentConfig, audit_dir: Pa
                     "planner_abstained": planner.stopped,
                     "recorded_read_policy": planner.recorded_read_policy(),
                     "unread_evidence_opportunities": unread_opportunities(
-                        catalog, planner.tool_names
+                        catalog, planner.tool_names, planner.optional_reads()
                     ),
                     "diagnosis_instruction": "Affirming or abstaining from an affinity test is "
                     "separate from explaining observed symptoms. Keep supported candidate "
@@ -293,6 +295,7 @@ def run_agent(client, executor: ToolExecutor, config: AgentConfig, audit_dir: Pa
                             and budget.feedback_capacity() >= 2
                             and total_calls < config.max_tool_calls
                         ),
+                        optional_reads=planner.optional_reads(),
                     )
                     access["deferral_source"] = (
                         "final_decision"

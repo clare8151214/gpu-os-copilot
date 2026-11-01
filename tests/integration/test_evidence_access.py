@@ -87,3 +87,65 @@ def test_old_decisions_remain_readable_without_inventing_a_deferral():
     )
     assert result.deferred_evidence == []
     assert result.hypotheses[0].category == "unknown"
+
+
+AFFINITY = "read_recorded_comparison"
+
+
+def affinity_deferral(reason="low_information_value"):
+    return EvidenceDeferral(
+        tool_name=AFFINITY,
+        reason=reason,
+        rationale="Deferred per recorded-read low-value policy.",
+    )
+
+
+@pytest.mark.parametrize("policy", ["low_value", "available"])
+def test_offered_affinity_read_can_be_disclosed_but_is_not_required(policy):
+    reads = {AFFINITY: policy}
+    disclosed = assess_evidence_access(
+        [affinity_deferral()], catalog(), {AFFINITY}, can_read_and_finish=True, optional_reads=reads
+    )
+    assert disclosed["status"] == "accounted"
+    assert disclosed["undisclosed_optional_tools"] == []
+    assert disclosed["unread_opportunities"][AFFINITY]["read_policy_status"] == policy
+    silent = assess_evidence_access(
+        [], catalog(), {AFFINITY}, can_read_and_finish=True, optional_reads=reads
+    )
+    assert silent["status"] == "accounted"
+    assert silent["undisclosed_optional_tools"] == [AFFINITY]
+
+
+def test_optional_read_must_still_be_offered():
+    result = assess_evidence_access(
+        [affinity_deferral()],
+        catalog(),
+        set(),
+        can_read_and_finish=True,
+        optional_reads={AFFINITY: "low_value"},
+    )
+    assert result["error_codes"] == ["DEFERRAL_NOT_AN_OFFERED_UNREAD_TOOL"]
+
+
+def test_scheduler_study_stays_required_alongside_optional_reads():
+    result = assess_evidence_access(
+        [affinity_deferral()],
+        catalog(),
+        {READ_TOOL, AFFINITY},
+        can_read_and_finish=True,
+        optional_reads={AFFINITY: "available"},
+    )
+    assert result["unaccounted_tools"] == [READ_TOOL]
+    assert result["unread_opportunities"][READ_TOOL]["required"] is True
+
+
+@pytest.mark.parametrize("available", [True, False])
+def test_optional_budget_deferral_uses_actual_feedback_capacity(available):
+    result = assess_evidence_access(
+        [affinity_deferral("insufficient_budget")],
+        catalog(),
+        {AFFINITY},
+        can_read_and_finish=available,
+        optional_reads={AFFINITY: "low_value"},
+    )
+    assert result["error_codes"] == (["EVIDENCE_READ_STILL_FITS_BUDGET"] if available else [])

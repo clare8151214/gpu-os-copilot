@@ -793,3 +793,28 @@ def test_final_response_errors_stay_failures_without_retry_or_execution(
     assert sum(row["kind"] == "response" for row in rows) == 1
     assert not any(row["kind"] in {"tool", "decision"} for row in rows)
     assert ex.executions == 0
+
+
+def test_optional_reads_follow_consumption_without_executor_support(load_fixture):
+    class Replay(Executor):
+        """Like frozen evaluation harnesses: only an unread count, no tool listing."""
+
+        prior_decision = None
+
+        def unread_comparison_count(self):
+            return 2 - len(self.reads)
+
+    ex = Replay(load_fixture())
+    p = ExperimentPlanner(
+        ex,
+        AgentConfig(),
+        evidence_catalog(ex.trace),
+        {"read_recorded_comparison", "read_repeated_comparisons"},
+    )
+    assert set(p.optional_reads()) == {"read_recorded_comparison", "read_repeated_comparisons"}
+    p.after_action("read_recorded_comparison", ex.execute("read_recorded_comparison", "{}"))
+    assert list(p.optional_reads()) == ["read_repeated_comparisons"]
+    ex.prior_decision = {"decision": "supported"}
+    p.actions.clear()
+    assert list(p.optional_reads()) == ["read_repeated_comparisons"]
+    assert planner(Executor(load_fixture())).optional_reads() == {}

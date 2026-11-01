@@ -102,7 +102,15 @@ def validate_investigation(decision: AgentDecision, catalog: dict) -> dict:
             errors.append("COUNTEREVIDENCE_ASSESSMENT_REQUIRED")
         if not hypothesis.testable_prediction.strip():
             errors.append("TESTABLE_PREDICTION_REQUIRED")
-        if not (support or hypothesis.evidence_event_ids or hypothesis.missing_evidence or missing):
+        # A competing alternative grounded only in counterevidence is still evidence-based.
+        if not (
+            support
+            or counter
+            or hypothesis.evidence_event_ids
+            or hypothesis.contradicting_event_ids
+            or hypothesis.missing_evidence
+            or missing
+        ):
             errors.append("HYPOTHESIS_HAS_NO_EVIDENCE_OR_EXPLICIT_LIMITATION")
         if hypothesis.confidence == "high" and (
             hypothesis.category == "unknown"
