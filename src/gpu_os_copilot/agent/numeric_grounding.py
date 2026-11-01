@@ -55,10 +55,10 @@ def resolve_reference(kind, names, metrics, default_scope):
     refs = names.split(":")
     if len(refs) != (2 if kind == "ratio" else 1):
         return None, "MALFORMED_NUMERIC_REFERENCE"
+    if any(ref not in metrics for ref in refs):
+        return None, "UNKNOWN_NUMERIC_METRIC"
     facts = []
     for ref in refs:
-        if ref not in metrics:
-            return None, "UNKNOWN_NUMERIC_METRIC"
         metric = metrics[ref]
         number = metric.get("value")
         if (
@@ -67,7 +67,14 @@ def resolve_reference(kind, names, metrics, default_scope):
             or type(number) not in {int, float}
             or not math.isfinite(number)
         ):
-            return None, "UNAVAILABLE_NUMERIC_METRIC"
+            # Name the gap explicitly instead of failing: no value is ever rendered.
+            state = "not read" if metric.get("availability_state") == "unread" else "unavailable"
+            return {
+                "kind": kind,
+                "facts": [],
+                "unavailable_metric_ref": ref,
+                "rendered": f"[{ref} {state}]",
+            }, None
         facts.append(
             {
                 "metric_ref": ref,
@@ -147,6 +154,7 @@ def ground_narrative(decision: AgentDecision, catalog: dict, *, visible_ids=()):
         "status": "invalid" if errors else "references_resolved" if references else "no_references",
         "errors": errors,
         "references": references,
+        "unavailable_references": sum("unavailable_metric_ref" in r for r in references),
         "narrative_semantics": "not_verified",
         "input_confidence": catalog.get("input_confidence"),
         "limitations": [

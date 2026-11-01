@@ -83,13 +83,18 @@ def test_unknown_malformed_and_dimensionally_invalid_references(catalog, text, c
     assert code in [error["code"] for error in check["errors"]]
 
 
-@pytest.mark.parametrize("state", ["unread", "unavailable"])
-def test_reference_cannot_expose_unread_or_missing_measurement(catalog, state):
+@pytest.mark.parametrize("state,marker", [("unread", "not read"), ("unavailable", "unavailable")])
+@pytest.mark.parametrize("kind", ["metric", "percent"])
+def test_reference_cannot_expose_unread_or_missing_measurement(catalog, state, marker, kind):
+    """Live dev-v1 hard-failed when a final rationale named a missing metric as unknown."""
     catalog["metrics"]["total_pairs"]["availability_state"] = state
-    rendered, check = ground_narrative(proposal("{{metric:total_pairs}}"), catalog)
-    assert rendered is None
-    assert check["references"] == []
-    assert check["errors"][0]["code"] == "UNAVAILABLE_NUMERIC_METRIC"
+    value = str(catalog["metrics"]["total_pairs"]["value"])
+    rendered, check = ground_narrative(proposal(f"Delay {{{{{kind}:total_pairs}}}}."), catalog)
+    assert check["status"] == "references_resolved" and check["unavailable_references"] == 1
+    assert check["references"][0]["facts"] == []
+    note = rendered.hypotheses[0].counterevidence_note
+    assert note == f"Delay [total_pairs {marker}]."
+    assert value not in note
 
 
 @pytest.mark.parametrize("mutation", ["scope", "unit", "zero", "noninteger"])
