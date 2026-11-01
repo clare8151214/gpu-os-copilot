@@ -1,5 +1,7 @@
 """Fixed, reviewable workloads; no downloaded code, datasets or executable parameters."""
 
+from gpu_os_copilot.workloads.patterns import PATTERN_VARIANTS, pattern_configuration
+
 WORKLOAD_VERSION = 2
 SCENARIO_SHAPES = {
     "cpu_contention": (256, 256),
@@ -7,11 +9,15 @@ SCENARIO_SHAPES = {
     "compute_bound": (2048, 2048),
     "cnn_inference": (32, 3, 32, 32),
     "cnn_training": (32, 3, 32, 32),
+    **{name: params["shape"] for name, (_, params) in PATTERN_VARIANTS.items()},
 }
 MODEL_SCENARIOS = frozenset({"cnn_inference", "cnn_training"})
+PATTERN_SCENARIOS = frozenset(PATTERN_VARIANTS)
 
 
-def expected_configuration(scenario: str) -> dict:
+def expected_configuration(scenario: str, ablated: bool = False, factor: str | None = None) -> dict:
+    if (ablated or factor) and scenario not in PATTERN_SCENARIOS:
+        raise ValueError("Only pattern scenarios have ablation twins")
     config = {
         "scenario": scenario,
         "workload_version": WORKLOAD_VERSION,
@@ -34,4 +40,6 @@ def expected_configuration(scenario: str) -> dict:
             cudnn_benchmark=False,
             cudnn_deterministic=True,
         )
+    if scenario in PATTERN_SCENARIOS:
+        config.update(pattern_configuration(scenario, ablated, factor))
     return config

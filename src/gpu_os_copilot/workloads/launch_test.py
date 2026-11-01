@@ -11,6 +11,7 @@ from uuid import uuid4
 
 from gpu_os_copilot.workloads.specs import (
     MODEL_SCENARIOS,
+    PATTERN_SCENARIOS,
     SCENARIO_SHAPES,
     expected_configuration,
 )
@@ -65,7 +66,20 @@ def main():
     parser.add_argument("--output-limit", type=int, default=65536)
     parser.add_argument("--profiled", action="store_true")
     parser.add_argument("--scheduler-gate", type=Path)
+    parser.add_argument(
+        "--ablate", action="store_true", help="Run the fixed ablation twin of a pattern scenario"
+    )
+    parser.add_argument("--factor", choices=["sync", "launch", "copy"])
     args = parser.parse_args()
+    if (args.ablate or args.factor) and args.scenario not in PATTERN_SCENARIOS:
+        parser.error("Only pattern scenarios have ablation twins")
+    if args.scenario in PATTERN_SCENARIOS:
+        from gpu_os_copilot.workloads.patterns import check_factor
+
+        try:
+            check_factor(args.scenario, args.ablate, args.factor)
+        except ValueError as error:
+            parser.error(str(error))
     if not 64 <= args.gpu_memory_mb <= 512 or not 1024 <= args.output_limit <= 1048576:
         parser.error("Resource limits outside permitted range")
     set_resource_limits(args.output_limit, profiled=args.profiled)
@@ -120,6 +134,10 @@ def main():
             from gpu_os_copilot.workloads.cnn import build_operation
 
             operation, validate = build_operation(torch, training=args.scenario == "cnn_training")
+        elif args.scenario in PATTERN_SCENARIOS:
+            from gpu_os_copilot.workloads.patterns import build_pattern
+
+            operation = build_pattern(torch, args.scenario, args.ablate, args.factor)
 
         for _ in range(10):
             operation()
@@ -189,7 +207,7 @@ def main():
                     "validation": validate(),
                     "clock_anchors": anchors,
                     "configuration": {
-                        **expected_configuration(args.scenario),
+                        **expected_configuration(args.scenario, args.ablate, args.factor),
                         "torch": torch.__version__,
                         "cuda": torch.version.cuda,
                         "gpu": properties.name,

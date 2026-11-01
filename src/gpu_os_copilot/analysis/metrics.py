@@ -25,6 +25,19 @@ def duration(intervals: list[tuple[int, int]]) -> int:
     return sum(end - start for start, end in merge_intervals(intervals))
 
 
+def intersection(left: list[tuple[int, int]], right: list[tuple[int, int]]) -> int:
+    """Overlap of two merged interval lists."""
+    total, i, j = 0, 0, 0
+    while i < len(left) and j < len(right):
+        start, end = max(left[i][0], right[j][0]), min(left[i][1], right[j][1])
+        total += max(0, end - start)
+        if left[i][1] < right[j][1]:
+            i += 1
+        else:
+            j += 1
+    return total
+
+
 def summarize(trace: TraceBundle) -> MetricSummary:
     window = trace.window
     start, end = window.start_ns, window.end_ns
@@ -37,6 +50,8 @@ def summarize(trace: TraceBundle) -> MetricSummary:
     kernels = [e for e in gpu if e.kind == "gpu_kernel"]
     transfers = [e for e in gpu if e.kind == "memcpy"]
     busy = merge_intervals([interval(e) for e in gpu])
+    kernel_busy = merge_intervals([interval(e) for e in kernels])
+    transfer_busy = merge_intervals([interval(e) for e in transfers])
     gaps = []
     cursor = start
     for left, right in busy:
@@ -58,7 +73,13 @@ def summarize(trace: TraceBundle) -> MetricSummary:
     api_classes = {}
     if api and None not in api_names:
         api_classes = {name: [] for name in API_CLASSES}
-        for e, name in zip(api, api_names, strict=True):
+        # Count only top-level calls per thread: runtime calls nest driver calls.
+        current_end = {}
+        for e, name in sorted(zip(api, api_names, strict=True), key=lambda p: p[0].start_ns):
+            thread = (e.pid, e.tid)
+            if e.end_ns <= current_end.get(thread, -1):
+                continue
+            current_end[thread] = e.end_ns
             api_classes[classify_api(name)].append(interval(e))
     elif api:
         missing.append("CUDA API names unavailable for some events; API class time unavailable")
@@ -159,6 +180,10 @@ def summarize(trace: TraceBundle) -> MetricSummary:
         transfer_duration_ms=transfer_ms,
         transfer_busy_fraction=duration([interval(e) for e in transfers]) / (end - start)
         if gpu
+        else None,
+        kernel_busy_fraction=duration(kernel_busy) / (end - start) if reliable_gpu else None,
+        kernel_transfer_overlap_ms=intersection(kernel_busy, transfer_busy) / 1e6
+        if reliable_gpu
         else None,
         cpu_runnable_delay_ms=sum(duration(v) for v in per_thread.values()) / 1e6
         if scheduler_available

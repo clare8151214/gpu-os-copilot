@@ -5,6 +5,8 @@ from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from gpu_os_copilot.workloads.patterns import PATTERN_VARIANTS
+
 Identifier = Annotated[str, Field(pattern=r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,95}$")]
 NonNegativeInt = Annotated[int, Field(strict=True, ge=0)]
 EventKind = Literal["cuda_api", "gpu_kernel", "memcpy", "memset", "cpu_sched", "nvtx", "other"]
@@ -13,7 +15,14 @@ Source = Literal["fixture", "nsys_sqlite", "linux_trace", "benchmark", "environm
 Confidence = Literal["measured", "derived", "simulated"]
 Scenario = Literal["cpu_starvation", "transfer_bound", "compute_bound"]
 WorkloadScenario = Literal[
-    "cpu_contention", "transfer_bound", "compute_bound", "cnn_inference", "cnn_training"
+    (
+        "cpu_contention",
+        "transfer_bound",
+        "compute_bound",
+        "cnn_inference",
+        "cnn_training",
+        *PATTERN_VARIANTS,
+    )
 ]
 
 
@@ -129,6 +138,9 @@ class MetricSummary(Envelope):
     cuda_api_class_counts: dict[str, int] = Field(default_factory=dict)
     transfer_duration_ms: dict[str, float] = Field(default_factory=dict)
     transfer_busy_fraction: float | None = Field(default=None, ge=0, le=1)
+    # Same GPU activity clock as busy/idle; unavailable unless GPU coverage is complete.
+    kernel_busy_fraction: float | None = Field(default=None, ge=0, le=1)
+    kernel_transfer_overlap_ms: float | None = Field(default=None, ge=0)
     cpu_runnable_delay_ms: float | None = Field(default=None, ge=0)
     sched_idle_overlap_ms: float | None = Field(default=None, ge=0)
     wall_time_ms: float | None = Field(default=None, gt=0)
@@ -144,7 +156,12 @@ class Hypothesis(Model):
         "synchronization",
         "gpu_compute",
         "unknown",
-    ]
+    ] = Field(
+        description="cpu_scheduling: launch threads wait to run on a CPU. launch_overhead: host "
+        "submission cost per kernel or graph. data_transfer: copies on the critical path. "
+        "synchronization: host blocking waits that stop CPU submission running ahead of the "
+        "GPU. gpu_compute: kernel execution itself occupies the device. unknown: not ranked."
+    )
     statement: str = Field(
         min_length=1,
         max_length=2000,

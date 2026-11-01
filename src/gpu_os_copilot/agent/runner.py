@@ -118,6 +118,9 @@ def run_agent(client, executor: ToolExecutor, config: AgentConfig, audit_dir: Pa
                 "metrics are unknown, not zero. Supporting events use evidence_event_ids; "
                 "counterevidence uses contradicting_event_ids. Keep explanations concise. "
                 "Every hypothesis is provisional, never a confirmed or sole cause. "
+                "Rank candidates by how much window time removing that factor would recover; "
+                "activity running concurrently with kernels recovers little. Use "
+                "evidence_catalog.metric_definitions for what each metric measures. "
                 + NUMERIC_INSTRUCTION
                 + " "
                 + scheduling_instruction

@@ -8,6 +8,8 @@ UNITS = {
     "gpu_idle_fraction": "fraction",
     "gpu_busy_ms": "ms",
     "transfer_busy_fraction": "fraction",
+    "kernel_busy_fraction": "fraction",
+    "kernel_transfer_overlap_ms": "ms",
     "cuda_api_duration_ms": "ms",
     "cpu_runnable_delay_ms": "ms",
     "sched_idle_overlap_ms": "ms",
@@ -21,6 +23,28 @@ UNITS = {
     "cuda_memcpy_api_ms": "ms",
     "cuda_launch_call_count": "events",
     "cuda_sync_call_count": "events",
+}
+
+
+DEFINITIONS = {
+    "gpu_idle_fraction": "Window share with no kernel, copy or memset on the device.",
+    "gpu_busy_ms": "Union of device activity time in the window.",
+    "transfer_busy_fraction": "Window share with at least one memcpy active.",
+    "kernel_busy_fraction": "Window share with at least one kernel executing.",
+    "kernel_transfer_overlap_ms": "Copy time that runs concurrently with kernels (GPU clock).",
+    "cuda_api_duration_ms": "Sum of host CUDA API call durations.",
+    "cpu_runnable_delay_ms": "Time launch threads were runnable but not running.",
+    "sched_idle_overlap_ms": "Runnable-wait time coinciding with GPU idle (verified clocks).",
+    "wall_time_ms": "Measured window wall time.",
+    "throughput_ops_s": "Workload operations per second in the window.",
+    "kernel_count": "Kernels executed in the window.",
+    "kernel_median_ms": "Median kernel duration.",
+    "kernel_total_ms": "Sum of kernel durations.",
+    "cuda_launch_api_ms": "Host time inside top-level kernel/graph launch calls (union).",
+    "cuda_sync_api_ms": "Host time blocked in explicit device/stream/event synchronize calls.",
+    "cuda_memcpy_api_ms": "Host time inside top-level memcpy calls (union).",
+    "cuda_launch_call_count": "Top-level kernel/graph launch calls in the window.",
+    "cuda_sync_call_count": "Top-level explicit host synchronize calls in the window.",
 }
 
 
@@ -75,6 +99,7 @@ def evidence_catalog(trace: TraceBundle) -> dict:
         "event_samples": samples,
         "scope": "Captured workload/device/window; counts are observed events, not coverage proof.",
         "causal_status": "Candidate explanations only; no sole cause is established.",
+        "metric_definitions": DEFINITIONS,
         "observability": observability(trace),
     }
 

@@ -258,8 +258,9 @@ def test_api_class_time_unions_nested_runtime_and_driver_calls(tmp_path):
     summary = summarize(import_sqlite(path, start_ns=0, end_ns=300, capture_complete=True))
     # cuLaunchKernel (5-30) is nested inside cudaLaunchKernel (0-40): 40 ns, not 65 ns.
     assert summary.cuda_api_class_ms["launch"] == pytest.approx(40 / 1e6)
+    # Nested driver calls are not counted as additional top-level launches.
     assert summary.cuda_api_class_counts == {
-        "launch": 2,
+        "launch": 1,
         "sync": 1,
         "memcpy": 1,
         "memset": 0,
@@ -291,6 +292,6 @@ def test_catalog_exposes_api_class_metrics_only_when_measured(tmp_path, load_fix
         "metrics"
     ]
     assert metrics["cuda_sync_api_ms"]["value"] == pytest.approx(40 / 1e6)
-    assert metrics["cuda_launch_call_count"] == {"value": 2, "unit": "events", "available": True}
+    assert metrics["cuda_launch_call_count"] == {"value": 1, "unit": "events", "available": True}
     unnamed = evidence_catalog(load_fixture())
     assert {"cuda_sync_api_ms", "cuda_launch_call_count"} <= set(unnamed["missing_metric_refs"])
