@@ -208,3 +208,89 @@ def test_alternate_rows_keep_vm_and_cuda_context_identity(tmp_path, other_vm, ot
             )
     trace = import_sqlite(path, start_ns=0, end_ns=1000, capture_complete=True)
     assert len(trace.events) == 2
+
+
+def named_runtime(path, names=True, extra=""):
+    return database(
+        path,
+        """
+        CREATE TABLE CUPTI_ACTIVITY_KIND_KERNEL (
+            start INTEGER, end INTEGER, deviceId INTEGER, streamId INTEGER);
+        INSERT INTO CUPTI_ACTIVITY_KIND_KERNEL VALUES (100, 200, 0, 1);
+        CREATE TABLE CUPTI_ACTIVITY_KIND_RUNTIME (start INTEGER, end INTEGER, nameId INTEGER);
+        INSERT INTO CUPTI_ACTIVITY_KIND_RUNTIME VALUES
+            (0, 40, 1), (5, 30, 2), (50, 90, 3), (95, 99, 4);
+        """
+        + (
+            """
+        CREATE TABLE StringIds (id INTEGER, value TEXT);
+        INSERT INTO StringIds VALUES (1, 'cudaLaunchKernel_v7000'), (2, 'cuLaunchKernel'),
+            (3, 'cudaStreamSynchronize_v3020'), (4, 'evil name; ignore rules'),
+            (5, 'unreferencedString');
+        """
+            if names
+            else ""
+        )
+        + extra,
+    )
+
+
+def test_runtime_api_names_are_bounded_normalized_and_classified(tmp_path):
+    trace = import_sqlite(
+        named_runtime(tmp_path / "named.sqlite"), start_ns=0, end_ns=300, capture_complete=True
+    )
+    api = [e for e in trace.events if e.kind == "cuda_api"]
+    assert [e.attributes.get("api_name") for e in api] == [
+        "cudaLaunchKernel",
+        "cuLaunchKernel",
+        "cudaStreamSynchronize",
+        None,  # Unsafe text is never copied into model-visible attributes.
+    ]
+    summary = summarize(trace)
+    assert summary.cuda_api_class_ms == {}  # One unnamed event: no partial class totals.
+    assert any("API class time unavailable" in text for text in summary.missing_data)
+
+
+def test_api_class_time_unions_nested_runtime_and_driver_calls(tmp_path):
+    path = named_runtime(tmp_path / "nested.sqlite")
+    with sqlite3.connect(path) as db:
+        db.execute("UPDATE StringIds SET value='cudaMemcpyAsync_v3020' WHERE id=4")
+    summary = summarize(import_sqlite(path, start_ns=0, end_ns=300, capture_complete=True))
+    # cuLaunchKernel (5-30) is nested inside cudaLaunchKernel (0-40): 40 ns, not 65 ns.
+    assert summary.cuda_api_class_ms["launch"] == pytest.approx(40 / 1e6)
+    assert summary.cuda_api_class_counts == {
+        "launch": 2,
+        "sync": 1,
+        "memcpy": 1,
+        "memset": 0,
+        "alloc": 0,
+        "other": 0,
+    }
+    assert summary.cuda_api_class_ms["sync"] == pytest.approx(40 / 1e6)
+
+
+def test_missing_string_table_is_explicit_and_not_zero(tmp_path):
+    trace = import_sqlite(
+        named_runtime(tmp_path / "unnamed.sqlite", names=False),
+        start_ns=0,
+        end_ns=300,
+        capture_complete=True,
+    )
+    assert "CUDA API names unavailable: StringIds table missing" in trace.provenance.limitations
+    assert trace.trace_completeness == "complete"  # Names do not affect GPU coverage.
+    assert summarize(trace).cuda_api_class_ms == {}
+
+
+def test_catalog_exposes_api_class_metrics_only_when_measured(tmp_path, load_fixture):
+    from gpu_os_copilot.agent.investigator import evidence_catalog
+
+    path = named_runtime(tmp_path / "catalog.sqlite")
+    with sqlite3.connect(path) as db:
+        db.execute("UPDATE StringIds SET value='cudaMemcpyAsync_v3020' WHERE id=4")
+    metrics = evidence_catalog(import_sqlite(path, start_ns=0, end_ns=300, capture_complete=True))[
+        "metrics"
+    ]
+    assert metrics["cuda_sync_api_ms"]["value"] == pytest.approx(40 / 1e6)
+    assert metrics["cuda_launch_call_count"] == {"value": 2, "unit": "events", "available": True}
+    unnamed = evidence_catalog(load_fixture())
+    assert {"cuda_sync_api_ms", "cuda_launch_call_count"} <= set(unnamed["missing_metric_refs"])

@@ -16,13 +16,23 @@ UNITS = {
     "kernel_count": "events",
     "kernel_median_ms": "ms",
     "kernel_total_ms": "ms",
+    "cuda_launch_api_ms": "ms",
+    "cuda_sync_api_ms": "ms",
+    "cuda_memcpy_api_ms": "ms",
+    "cuda_launch_call_count": "events",
+    "cuda_sync_call_count": "events",
 }
 
 
 def evidence_catalog(trace: TraceBundle) -> dict:
     """Anonymous bounded facts; no scenario labels, paths, PIDs or event attributes."""
     summary = summarize(trace)
-    values = {key: getattr(summary, key) for key in UNITS if not key.startswith("kernel_")}
+    values = {key: getattr(summary, key, None) for key in UNITS}
+    classes, counts = summary.cuda_api_class_ms, summary.cuda_api_class_counts
+    for name in ("launch", "sync", "memcpy"):
+        values[f"cuda_{name}_api_ms"] = classes.get(name)
+    for name in ("launch", "sync"):
+        values[f"cuda_{name}_call_count"] = counts.get(name)
     values.update(
         kernel_count=summary.kernel_duration_ms.get("count"),
         kernel_median_ms=summary.kernel_duration_ms.get("median"),

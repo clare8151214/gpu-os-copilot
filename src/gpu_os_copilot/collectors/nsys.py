@@ -4,6 +4,7 @@ import sqlite3
 import sys
 from pathlib import Path
 
+from gpu_os_copilot.analysis.api_classes import normalize_api_name
 from gpu_os_copilot.schemas import ObservationWindow, Provenance, TraceBundle, TraceEvent
 from gpu_os_copilot.workloads.specs import SCENARIO_SHAPES
 
@@ -43,6 +44,26 @@ def discover_schema(connection: sqlite3.Connection) -> dict[str, list[str]]:
         name: [row[1] for row in connection.execute(f"PRAGMA table_info({_quote(name)})")]
         for (name,) in tables
     }
+
+
+def _api_names(connection, schema, limitations) -> dict[int, str]:
+    """Bounded lookup of only the runtime API names referenced by the capture."""
+    if not {"id", "value"}.issubset(schema.get("StringIds", [])):
+        limitations.append("CUDA API names unavailable: StringIds table missing")
+        return {}
+    rows = connection.execute(
+        "SELECT id, value FROM StringIds WHERE id IN "
+        "(SELECT DISTINCT nameId FROM CUPTI_ACTIVITY_KIND_RUNTIME) LIMIT 1001"
+    ).fetchall()
+    if len(rows) > 1000:
+        limitations.append("CUDA API name budget reached; names unavailable")
+        return {}
+    names = {}
+    for row in rows:
+        name = normalize_api_name(row[1])
+        if type(row[0]) is int and name is not None:
+            names[row[0]] = name
+    return names
 
 
 def import_sqlite(
@@ -125,6 +146,11 @@ def import_sqlite(
                 if table == "CUPTI_ACTIVITY_KIND_CONCURRENT_KERNEL"
                 else set()
             )
+            names = (
+                _api_names(connection, schema, limitations)
+                if kind == "cuda_api" and "nameId" in columns
+                else {}
+            )
             connection.row_factory = sqlite3.Row
             selected = [
                 c
@@ -139,6 +165,7 @@ def import_sqlite(
                     "globalPid",
                     "globalTid",
                     "contextId",
+                    "nameId",
                 )
                 if c in columns
             ]
@@ -165,6 +192,8 @@ def import_sqlite(
                     attributes = {}
                     if data.get("contextId") is not None:
                         attributes["context_id"] = data["contextId"]
+                    if data.get("nameId") in names:
+                        attributes["api_name"] = names[data["nameId"]]
                     if type(global_id) is int and global_id >= 0:
                         # NVIDIA's shipped cuda_kern_exec_trace.py uses this encoding.
                         pid = pid if pid is not None else (global_id >> 24) & 0xFFFFFF

@@ -124,6 +124,9 @@ class MetricSummary(Envelope):
     gpu_idle_intervals_ns: list[tuple[int, int]] = Field(default_factory=list)
     kernel_duration_ms: dict[str, float] = Field(default_factory=dict)
     cuda_api_duration_ms: float | None = Field(default=None, ge=0)
+    # Host-side union time per API class; empty unless every in-window API event is named.
+    cuda_api_class_ms: dict[str, float] = Field(default_factory=dict)
+    cuda_api_class_counts: dict[str, int] = Field(default_factory=dict)
     transfer_duration_ms: dict[str, float] = Field(default_factory=dict)
     transfer_busy_fraction: float | None = Field(default=None, ge=0, le=1)
     cpu_runnable_delay_ms: float | None = Field(default=None, ge=0)

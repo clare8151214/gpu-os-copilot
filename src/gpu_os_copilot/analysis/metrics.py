@@ -2,6 +2,7 @@
 
 from statistics import median
 
+from gpu_os_copilot.analysis.api_classes import API_CLASSES, classify_api, normalize_api_name
 from gpu_os_copilot.analysis.correlate import correlation_audit
 from gpu_os_copilot.schemas import GPU_ACTIVITY_KINDS, MetricSummary, TraceBundle
 
@@ -53,6 +54,14 @@ def summarize(trace: TraceBundle) -> MetricSummary:
     api = [e for e in events if e.kind == "cuda_api"]
     if not api:
         missing.append("CUDA API events unavailable")
+    api_names = [normalize_api_name(e.attributes.get("api_name")) for e in api]
+    api_classes = {}
+    if api and None not in api_names:
+        api_classes = {name: [] for name in API_CLASSES}
+        for e, name in zip(api, api_names, strict=True):
+            api_classes[classify_api(name)].append(interval(e))
+    elif api:
+        missing.append("CUDA API names unavailable for some events; API class time unavailable")
     timing = correlation_audit(trace)
     if not timing["conditional_timing_eligible"]:
         missing.append(
@@ -145,6 +154,8 @@ def summarize(trace: TraceBundle) -> MetricSummary:
         cuda_api_duration_ms=sum(b - a for e in api for a, b in [interval(e)]) / 1e6
         if api
         else None,
+        cuda_api_class_ms={name: duration(v) / 1e6 for name, v in api_classes.items()},
+        cuda_api_class_counts={name: len(v) for name, v in api_classes.items()},
         transfer_duration_ms=transfer_ms,
         transfer_busy_fraction=duration([interval(e) for e in transfers]) / (end - start)
         if gpu
