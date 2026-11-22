@@ -111,6 +111,19 @@ def inspect_input(case_path, source, method):
     return json.loads(process.stdout)
 
 
+def removal_view(raw):
+    """Only conditions and throughputs reach the case; names and paths stay private."""
+    view = {"status": raw["status"]}
+    if raw["status"] == "ok":
+        view["trials"] = [
+            {"condition": t["condition"], "throughput_ops_s": t["throughput_ops_s"]}
+            for t in raw["trials"]
+        ]
+    else:
+        view["error"] = "Removal batch failed"
+    return view
+
+
 def prepare_case(item, case_id, *, case_directory=None):
     source = TraceBundle.model_validate_json(Path(item["trace"]).read_text())
     if source.provenance.confidence != "measured":
@@ -188,6 +201,14 @@ def prepare_case(item, case_id, *, case_directory=None):
     scheduler_sources = {}
     if item.get("runtime_evidence", False) or "scheduler_manifest" in item:
         case["runtime_evidence"] = True
+    if "removal_experiments" in item:
+        from gpu_os_copilot.agent.removal import FACTOR_CATEGORY
+
+        case["removal_experiments"] = {
+            FACTOR_CATEGORY[factor]: removal_view(json.loads(Path(path).read_text()))
+            for factor, path in sorted(item["removal_experiments"].items())
+        }
+        sources.extend(item["removal_experiments"].values())
     if "scheduler_manifest" in item:
         if case_directory is None:
             raise ValueError("Scheduling inputs require a frozen case directory")
@@ -204,7 +225,7 @@ def prepare_case(item, case_id, *, case_directory=None):
         "rubric": item["rubric"],
         "sources_sha256": {**{path: sha(path) for path in sources}, **scheduler_sources},
         "opening_sha256": digest(ex.evidence()),
-        "common_tools_sha256": digest(ex.tool_schemas()),
+        "common_tools_sha256": digest(ex.common_tool_schemas()),
     }
     if "scheduler_manifest" in item:
         key["scheduler_derivation"] = item.get("scheduler_derivation", "none")
@@ -252,6 +273,10 @@ def main():
             key["opening_sha256_by_method"] = {
                 method: entry["opening_sha256"] for method, entry in inspected.items()
             }
+            if "removal_experiments" in case:
+                key["tools_sha256_by_method"] = {
+                    method: entry["tools_sha256"] for method, entry in inspected.items()
+                }
         case_files.append({"path": path.name, "sha256": sha(path), "case_id": case["case_id"]})
         keys.append(key)
     (args.out / "private-answer-key.json").write_text(json.dumps(keys, indent=2) + "\n")

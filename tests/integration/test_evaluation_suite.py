@@ -362,6 +362,14 @@ def test_per_method_input_hashes_are_strict_and_keep_legacy_fallback(modules):
         run.validate_result_inputs(result, key, "enhanced")
     with pytest.raises(KeyError):
         run.validate_result_inputs(result, key, "unknown")
+    key["tools_sha256_by_method"] = {"legacy": "matched", "enhanced": "with-removal"}
+    with pytest.raises(ValueError):
+        run.validate_result_inputs(result, key, "legacy")
+    result["tools_sha256"] = "matched"
+    run.validate_result_inputs(result, key, "legacy")
+    result["opening_sha256"] = "new"
+    with pytest.raises(ValueError):
+        run.validate_result_inputs(result, key, "enhanced")
 
 
 @pytest.mark.parametrize("mutation", ["bytes", "escape", "symlink"])

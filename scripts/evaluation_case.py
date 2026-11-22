@@ -112,7 +112,8 @@ def main():
             json.dumps(
                 {
                     "opening_sha256": digest(ex.evidence()),
-                    "common_tools_sha256": digest(ex.tool_schemas()),
+                    "common_tools_sha256": digest(ex.common_tool_schemas()),
+                    "tools_sha256": digest(ex.tool_schemas()),
                 }
             )
         )
@@ -131,7 +132,8 @@ def main():
         else "meta",
         "runner_sha256": args.runner_sha256,
         "opening_sha256": digest(ex.evidence()),
-        "common_tools_sha256": digest(ex.tool_schemas()),
+        "common_tools_sha256": digest(ex.common_tool_schemas()),
+        "tools_sha256": digest(ex.tool_schemas()),
         "new_hardware_experiments": 0,
     }
     if args.method == "rules":

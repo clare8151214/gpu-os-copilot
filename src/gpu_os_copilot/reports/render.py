@@ -3,7 +3,9 @@ import json
 from gpu_os_copilot.schemas import Hypothesis, MetricSummary
 
 
-def render(summary: MetricSummary, hypotheses: list[Hypothesis]) -> str:
+def render(
+    summary: MetricSummary, hypotheses: list[Hypothesis], ranking_rule: str | None = None
+) -> str:
     label = summary.provenance.confidence.upper()
     idle = summary.gpu_idle_fraction
     lines = [
@@ -20,6 +22,8 @@ def render(summary: MetricSummary, hypotheses: list[Hypothesis]) -> str:
         f"CPU runnable delay (ms): {summary.cpu_runnable_delay_ms}",
         "Candidate hypotheses (not established causes):",
     ]
+    if ranking_rule is not None:
+        lines.insert(-1, f"Ranking rule: {ranking_rule}")
     lines.extend(f"- {h.category} [{h.confidence}]: {h.statement}" for h in hypotheses)
     lines.extend(f"Missing/limited: {item}" for item in summary.missing_data)
     lines.append("Workload gaps do not establish whole-device idleness or a measured speedup.")

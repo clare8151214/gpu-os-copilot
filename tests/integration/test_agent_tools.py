@@ -147,6 +147,7 @@ def test_meta_sdk_round_trip_without_network(monkeypatch, load_fixture, worker, 
         def __init__(self, **kwargs):
             assert kwargs["base_url"] == "https://api.meta.ai/v1"
             assert kwargs["max_retries"] == 0
+            assert kwargs["timeout"] == 120
             self.chat = type("Chat", (), {"completions": Completion()})()
 
     monkeypatch.setattr(openai, "OpenAI", SDK)
@@ -201,15 +202,22 @@ def test_truncated_response_never_executes_tools(load_fixture, worker, tmp_path)
     assert executor.experiment_count == 0
     rows = [json.loads(line) for line in next(tmp_path.glob("*.jsonl")).read_text().splitlines()]
     assert rows[-1]["error_code"] == "AGENT_RESPONSE_TRUNCATED"
+    assert any(row["kind"] == "output_feedback" for row in rows)
     assert not any(row["kind"] == "tool" for row in rows)
 
 
 def test_response_budget_configuration(monkeypatch):
     monkeypatch.setenv("META_MAX_COMPLETION_TOKENS", "3072")
     monkeypatch.setenv("META_REASONING_EFFORT", "low")
+    monkeypatch.setenv("META_REQUEST_TIMEOUT_S", "90")
     config = AgentConfig.from_environment()
     assert config.max_completion_tokens == 3072
     assert config.reasoning_effort == "low"
+    assert config.request_timeout_s == 90
+    monkeypatch.setenv("META_REQUEST_TIMEOUT_S", "5")
+    with pytest.raises(ValueError):
+        AgentConfig.from_environment()
+    monkeypatch.setenv("META_REQUEST_TIMEOUT_S", "120")
     monkeypatch.setenv("META_MAX_COMPLETION_TOKENS", "999999")
     with pytest.raises(ValueError):
         AgentConfig.from_environment()

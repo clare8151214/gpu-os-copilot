@@ -11,7 +11,7 @@ from pydantic import ValidationError
 
 from gpu_os_copilot.analysis.metrics import summarize
 from gpu_os_copilot.analysis.observability import observability
-from gpu_os_copilot.analysis.rule_baseline import diagnose
+from gpu_os_copilot.analysis.rule_baseline_v4 import diagnose_v4, ranking_rule
 from gpu_os_copilot.config import AgentConfig, CopilotError
 from gpu_os_copilot.reports.render import render
 from gpu_os_copilot.schemas import (
@@ -211,10 +211,12 @@ def main(argv: list[str] | None = None) -> int:
                 simulated=args.simulated,
             )
         summary = summarize(trace)
-        hypotheses = diagnose(trace, summary)
+        hypotheses = diagnose_v4(trace, summary)
+        rule = ranking_rule(trace, summary)
         output = {
             "summary": summary.model_dump(mode="json"),
             "observability": observability(trace),
+            "ranking_rule": rule,
             "hypotheses": [h.model_dump() for h in hypotheses],
         }
         scheduling_study = None
@@ -252,7 +254,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.json:
             print(json.dumps(output, indent=2))
         else:
-            print(render(summary, hypotheses))
+            print(render(summary, hypotheses, rule))
             if "scheduling_evidence" in output:
                 print(json.dumps(output["scheduling_evidence"], indent=2))
             if "agent" in output:

@@ -16,10 +16,20 @@ from gpu_os_copilot.agent.investigator import evidence_catalog, validate_investi
 from gpu_os_copilot.agent.numeric_grounding import INSTRUCTION as NUMERIC_INSTRUCTION
 from gpu_os_copilot.agent.numeric_grounding import ground_narrative
 from gpu_os_copilot.agent.planner import ExperimentPlanner, plan_schema
+from gpu_os_copilot.agent.removal import INSTRUCTION as REMOVAL_INSTRUCTION
+from gpu_os_copilot.agent.removal import TOOL as REMOVAL_TOOL
 from gpu_os_copilot.agent.tools import ToolExecutor, tool_schemas
 from gpu_os_copilot.analysis.scheduling_study import READ_TOOL
 from gpu_os_copilot.config import AgentConfig, CopilotError
 from gpu_os_copilot.schemas import AgentDecision
+
+# Provider failures that carry no response; each re-send is a new reserved request.
+TRANSIENT_PROVIDER_ERRORS = (
+    "META_API_TIMEOUT",
+    "META_API_CONNECTION_FAILED",
+    "META_API_SERVER_ERROR",
+)
+MAX_PROVIDER_RETRIES = 2
 
 
 def sanitize(value):
@@ -91,6 +101,7 @@ def run_agent(client, executor: ToolExecutor, config: AgentConfig, audit_dir: Pa
         if READ_TOOL in planner.tool_names
         else ""
     )
+    removal_instruction = REMOVAL_INSTRUCTION + " " if REMOVAL_TOOL in planner.tool_names else ""
     messages = [
         {
             "role": "system",
@@ -118,9 +129,16 @@ def run_agent(client, executor: ToolExecutor, config: AgentConfig, audit_dir: Pa
                 "metrics are unknown, not zero. Supporting events use evidence_event_ids; "
                 "counterevidence uses contradicting_event_ids. Keep explanations concise. "
                 "Every hypothesis is provisional, never a confirmed or sole cause. "
-                "Rank candidates by how much window time removing that factor would recover; "
-                "activity running concurrently with kernels recovers little. Use "
-                "evidence_catalog.metric_definitions for what each metric measures. "
+                "Rank the removable factors (synchronization, data_transfer, launch_overhead) "
+                "by how much window time removing that factor would recover; activity running "
+                "concurrently with kernels recovers little, and host time blocked while the GPU "
+                "is executing is not GPU time lost. The removal_estimate fractions put these "
+                "on one comparable scale. gpu_compute cannot be removed: rank it first when "
+                "kernel_busy_fraction is at least 0.5 and no removable factor would recover "
+                "half the window (every share below 0.5); otherwise rank the removable factor "
+                "with the largest share first. Use evidence_catalog.metric_definitions for "
+                "what each metric measures. "
+                + removal_instruction
                 + NUMERIC_INSTRUCTION
                 + " "
                 + scheduling_instruction
@@ -157,7 +175,7 @@ def run_agent(client, executor: ToolExecutor, config: AgentConfig, audit_dir: Pa
         },
         {"role": "user", "content": json.dumps(opening_evidence)},
     ]
-    total_calls, seen_ids = 0, set()
+    total_calls, seen_ids, provider_retries = 0, set(), 0
     started = time.monotonic()
     if mode == "mock" and executor.owner_approved:
         raise CopilotError("MOCK_CANNOT_EXECUTE_EXPERIMENTS")
@@ -230,28 +248,90 @@ def run_agent(client, executor: ToolExecutor, config: AgentConfig, audit_dir: Pa
                     budget=budget.report(),
                     controller_state=controller_state,
                 )
-                response = client.complete(
-                    messages,
-                    offered_tools,
-                )
+                try:
+                    response = client.complete(messages, offered_tools)
+                except CopilotError as error:
+                    code = str(error).split(":")[0]
+                    if (
+                        code not in TRANSIENT_PROVIDER_ERRORS
+                        or provider_retries >= MAX_PROVIDER_RETRIES
+                        or budget.feedback_capacity() < 1
+                    ):
+                        raise
+                    provider_retries += 1
+                    record("provider_retry", step=step, error_code=code, retry=provider_retries)
+                    # Re-send the same conversation with a fresh controller state next step.
+                    messages.pop()
+                    continue
                 if len(json.dumps(response)) > 65536:
                     raise CopilotError("AGENT_RESPONSE_BUDGET_EXCEEDED")
                 message = response["message"]
                 record("response", step=step, response=response)
                 budget.observe(response.get("usage"))
                 if response.get("finish_reason") == "length":
-                    raise CopilotError(
-                        "AGENT_RESPONSE_TRUNCATED: increase META_MAX_COMPLETION_TOKENS "
-                        "or reduce META_REASONING_EFFORT before retrying"
+                    if budget.feedback_capacity() < 1:
+                        raise CopilotError(
+                            "AGENT_RESPONSE_TRUNCATED: increase META_MAX_COMPLETION_TOKENS "
+                            "or reduce META_REASONING_EFFORT before retrying"
+                        )
+                    # Partial text and tool calls are discarded unexecuted; the retry spends
+                    # an already reserved response, so budgets are unchanged.
+                    record("output_feedback", error_code="AGENT_RESPONSE_TRUNCATED")
+                    messages.append(
+                        {
+                            "role": "user",
+                            "content": json.dumps(
+                                {
+                                    "output_feedback": "AGENT_RESPONSE_TRUNCATED",
+                                    "remaining_responses": config.max_steps - step - 1,
+                                    "instruction": "The previous response exceeded the "
+                                    "completion limit and was discarded unexecuted. Respond "
+                                    "again with shorter reasoning and text. Budgets are "
+                                    "unchanged.",
+                                }
+                            ),
+                        }
                     )
+                    continue
                 calls = message.get("tool_calls") or []
                 if final_response and calls:
                     raise CopilotError("AGENT_FINAL_RESPONSE_REQUIRED")
                 if not calls:
                     try:
                         decision = AgentDecision.model_validate_json(message.get("content") or "")
-                    except ValidationError:
-                        raise CopilotError("AGENT_DECISION_INVALID") from None
+                    except ValidationError as error:
+                        # A final (tool-less) response may still be repaired while response
+                        # capacity remains; the repair stays tool-less.
+                        if budget.feedback_capacity() < 1:
+                            raise CopilotError("AGENT_DECISION_INVALID") from None
+                        # Error types and locations only; pydantic keeps input values elsewhere.
+                        problems = [
+                            {"type": e["type"], "loc": list(e["loc"]), "msg": e["msg"]}
+                            for e in error.errors()[:10]
+                        ]
+                        record(
+                            "output_feedback",
+                            error_code="AGENT_DECISION_INVALID",
+                            problems=problems,
+                        )
+                        if message.get("content"):
+                            messages.append({"role": "assistant", "content": message["content"]})
+                        messages.append(
+                            {
+                                "role": "user",
+                                "content": json.dumps(
+                                    {
+                                        "output_feedback": "AGENT_DECISION_INVALID",
+                                        "problems": problems,
+                                        "remaining_responses": config.max_steps - step - 1,
+                                        "instruction": "Return the decision as one JSON object "
+                                        "matching the schema, with no other text. Budgets are "
+                                        "unchanged.",
+                                    }
+                                ),
+                            }
+                        )
+                        continue
                     ids = {e.id for e in executor.trace.events}
                     cited_ids = {
                         ref
@@ -269,7 +349,7 @@ def run_agent(client, executor: ToolExecutor, config: AgentConfig, audit_dir: Pa
                     investigation = validate_investigation(decision, catalog)
                     if investigation["status"] == "invalid":
                         record("investigation_feedback", investigation=investigation)
-                        if final_response:
+                        if budget.feedback_capacity() < 1:
                             raise CopilotError("AGENT_INVESTIGATION_INVALID")
                         messages.extend(
                             [
@@ -347,7 +427,7 @@ def run_agent(client, executor: ToolExecutor, config: AgentConfig, audit_dir: Pa
                     )
                     record("numeric_grounding", assessment=numeric, proposed_decision=proposed)
                     if grounded is None:
-                        if final_response:
+                        if budget.feedback_capacity() < 1:
                             raise CopilotError("AGENT_NUMERIC_GROUNDING_INVALID")
                         messages.extend(
                             [
@@ -384,6 +464,9 @@ def run_agent(client, executor: ToolExecutor, config: AgentConfig, audit_dir: Pa
                         "audit_path": str(audit),
                         "scheduling_evidence": executor.scheduling_evidence()
                         if hasattr(executor, "scheduling_evidence")
+                        else None,
+                        "removal_experiments": executor.removal_report()
+                        if hasattr(executor, "removal_report")
                         else None,
                     }
                 if len(calls) > 4 or total_calls + len(calls) > config.max_tool_calls:
@@ -430,7 +513,7 @@ def run_agent(client, executor: ToolExecutor, config: AgentConfig, audit_dir: Pa
                         if result is None:
                             result = executor.execute(function["name"], function["arguments"])
                         planner.after_action(function["name"], result)
-                    if function["name"] == READ_TOOL:
+                    if function["name"] in {READ_TOOL, REMOVAL_TOOL}:
                         refresh_additional_metrics()
                     if function["name"] == "inspect_timeline":
                         visible_ids.update(

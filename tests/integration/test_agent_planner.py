@@ -393,6 +393,38 @@ def test_explicit_abstention_withdraws_tools_on_next_response(load_fixture, tmp_
     assert not ex.reads and ex.executions == 0
 
 
+@pytest.mark.parametrize("kind", ["output_feedback", "investigation_feedback"])
+def test_tool_less_final_response_is_repaired_while_capacity_remains(load_fixture, tmp_path, kind):
+    # Tools are withdrawn after abstention, but four responses remain: one invalid final
+    # answer gets feedback instead of ending the session, and the repair stays tool-less.
+    content = final_response()["content"]
+    if kind == "output_feedback":
+        bad = {"content": content + "\n}"}
+    else:
+        decision = json.loads(content)
+        decision["hypotheses"][0]["counterevidence_note"] = ""
+        bad = {"content": json.dumps(decision)}
+    ex = Executor(load_fixture())
+    offered = []
+
+    class StopClient(Responses):
+        def complete(self, messages, tools):
+            offered.append(tools)
+            return super().complete(messages, tools)
+
+    stop = json.loads(arguments("abstain", expected_information_gain="low", expected_outcomes=[]))
+    client = StopClient(
+        [{"tool_calls": [tool_call("stop", "plan_next_action", stop)]}, bad, final_response()]
+    )
+    report = run_agent(client, ex, AgentConfig(max_steps=5), tmp_path)
+    assert report["decision"]["decision"] == "inconclusive"
+    assert offered[1] == offered[2] == []
+    rows = [json.loads(line) for line in next(tmp_path.glob("*.jsonl")).read_text().splitlines()]
+    assert sum(row["kind"] == kind for row in rows) == 1
+    assert sum(row["kind"] == "budget_reservation" for row in rows) == 3
+    assert not ex.reads and ex.executions == 0
+
+
 def test_replay_available_without_live_authorization_and_second_read_stops(load_fixture):
     ex = Executor(load_fixture())
     ex.owner_approved = False
@@ -792,6 +824,41 @@ def test_final_response_errors_stay_failures_without_retry_or_execution(
     rows = [json.loads(line) for line in next(tmp_path.glob("*.jsonl")).read_text().splitlines()]
     assert sum(row["kind"] == "response" for row in rows) == 1
     assert not any(row["kind"] in {"tool", "decision"} for row in rows)
+    assert ex.executions == 0
+
+
+@pytest.mark.parametrize(
+    "bad,code",
+    [
+        ({"message": {"content": final_response()["content"] + "\n}"}}, "AGENT_DECISION_INVALID"),
+        (
+            {
+                "finish_reason": "length",
+                "message": {"tool_calls": [tool_call("cut", "read_recorded_comparison", {})]},
+            },
+            "AGENT_RESPONSE_TRUNCATED",
+        ),
+    ],
+)
+def test_malformed_non_final_output_gets_feedback_within_budget(load_fixture, tmp_path, bad, code):
+    ex = Executor(load_fixture())
+    replies, seen = iter([bad, {"message": final_response()}]), []
+
+    class Client:
+        mode = "meta"
+
+        def complete(self, messages, tools):
+            seen.append(messages.copy())
+            return next(replies)
+
+    report = run_agent(Client(), ex, AgentConfig(max_steps=3), tmp_path)
+    assert report["decision"]["decision"] == "inconclusive"
+    assert json.loads(seen[1][-2]["content"])["output_feedback"] == code
+    # Only parseable text is echoed back; truncated output is discarded.
+    assert (seen[1][-3]["role"] == "assistant") == (code == "AGENT_DECISION_INVALID")
+    rows = [json.loads(line) for line in next(tmp_path.glob("*.jsonl")).read_text().splitlines()]
+    assert [row["error_code"] for row in rows if row["kind"] == "output_feedback"] == [code]
+    assert not any(row["kind"] == "tool" for row in rows)
     assert ex.executions == 0
 
 

@@ -6,6 +6,7 @@ from gpu_os_copilot.schemas import (
     CaptureRequest,
     ExperimentRequest,
     ExperimentResult,
+    RemovalRequest,
     TraceBundle,
     TraceRequest,
     TraceResult,
@@ -54,6 +55,23 @@ class LocalWorker:
         from gpu_os_copilot.experiments.affinity import run_affinity_ab
 
         return run_affinity_ab(self, request)
+
+    def run_removal(self, request: RemovalRequest) -> dict:
+        request = RemovalRequest.model_validate(request.model_dump())
+        if request.worker_id != self.worker_id:
+            raise ValueError("Worker ID mismatch")
+        if not request.owner_approved:
+            return {"status": "failed", "error": "OWNER_APPROVAL_REQUIRED", "trials": []}
+        from gpu_os_copilot.experiments.ablation import run_ablation
+
+        return run_ablation(
+            request.scenario,
+            request.cpu,
+            factor=request.factor,
+            batches=1,
+            trials=request.pairs,
+            timeout_s=request.timeout_s,
+        )
 
     def import_sqlite(self, path: Path, **kwargs) -> TraceBundle:
         from gpu_os_copilot.collectors.nsys import import_sqlite

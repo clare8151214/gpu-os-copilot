@@ -141,6 +141,16 @@ class MetricSummary(Envelope):
     # Same GPU activity clock as busy/idle; unavailable unless GPU coverage is complete.
     kernel_busy_fraction: float | None = Field(default=None, ge=0, le=1)
     kernel_transfer_overlap_ms: float | None = Field(default=None, ge=0)
+    # Window share recoverable by removing each factor: its device-timeline partition time,
+    # capped by the host's own submission time after that removal (first-order;
+    # correlation-linked host order, no cross-clock comparison).
+    removal_estimate_synchronization_fraction: float | None = Field(default=None, ge=0, le=1)
+    removal_estimate_data_transfer_fraction: float | None = Field(default=None, ge=0, le=1)
+    removal_estimate_launch_overhead_fraction: float | None = Field(default=None, ge=0, le=1)
+    kernel_only_busy_fraction: float | None = Field(default=None, ge=0, le=1)
+    # Device-timeline idle before the first or after the last work in the window.
+    unattributed_idle_fraction: float | None = Field(default=None, ge=0, le=1)
+    host_submission_fraction: float | None = Field(default=None, ge=0, le=1)
     cpu_runnable_delay_ms: float | None = Field(default=None, ge=0)
     sched_idle_overlap_ms: float | None = Field(default=None, ge=0)
     wall_time_ms: float | None = Field(default=None, gt=0)
@@ -288,6 +298,19 @@ class ExperimentRequest(Envelope):
         return self
 
 
+class RemovalRequest(Envelope):
+    """One bounded removal batch: base/removed pairs of a pattern workload's designed factor."""
+
+    kind: Literal["removal_ab"] = "removal_ab"
+    workload_id: Literal["launch_test"] = "launch_test"
+    scenario: WorkloadScenario
+    factor: Literal["sync", "launch", "copy"] | None = None
+    cpu: NonNegativeInt
+    pairs: Annotated[int, Field(strict=True, ge=2, le=5)] = 5
+    timeout_s: Annotated[int, Field(strict=True, ge=1, le=120)] = 60
+    owner_approved: bool = Field(default=False, strict=True)
+
+
 class BenchmarkTrial(Model):
     run_id: Identifier
     condition: Literal["baseline", "treatment"]
@@ -301,7 +324,9 @@ class BenchmarkTrial(Model):
         default=None, description="Controller UTC time before child execution, including setup"
     )
     finished_at: datetime | None = Field(
-        default=None, description="Controller UTC time after child execution and cleanup"
+        default=None,
+        description="Controller UTC start plus monotonic elapsed time after child execution "
+        "and cleanup",
     )
     gpu_idle_fraction: None = None
     missing_data: list[str] = Field(default_factory=lambda: ["No profiler trace for timed trial"])
@@ -325,6 +350,9 @@ class BenchmarkTrial(Model):
 class ExperimentResult(Envelope):
     status: Literal["dry_run", "ok", "partial", "failed", "unsupported", "duplicate"]
     error_code: str | None = None
+    # Exception type, child exit status/signal and stderr size; stderr text stays local.
+    # Omitted when empty so recorded results stay readable by earlier schema versions.
+    failure: dict[str, Any] = Field(default_factory=dict, exclude_if=lambda value: not value)
     trials: list[BenchmarkTrial] = Field(default_factory=list)
     comparison: dict[str, Any] = Field(default_factory=dict)
     plan: dict[str, Any] = Field(default_factory=dict)

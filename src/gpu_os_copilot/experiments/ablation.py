@@ -3,10 +3,10 @@
 import os
 import sys
 import time
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from statistics import median
 
-from gpu_os_copilot.experiments.affinity import _invoke
+from gpu_os_copilot.experiments.affinity import ChildRunError, _invoke
 from gpu_os_copilot.workloads.specs import PATTERN_SCENARIOS, expected_configuration
 
 
@@ -49,7 +49,7 @@ def run_ablation(
                     remaining = deadline - time.monotonic()
                     if remaining <= 0:
                         raise TimeoutError("ABLATION_TIMEOUT")
-                    started = datetime.now(UTC).isoformat()
+                    started, clock = datetime.now(UTC), time.monotonic()
                     raw = invoke(
                         [
                             sys.executable,
@@ -85,8 +85,11 @@ def run_ablation(
                             "condition": "ablated" if ablated else "base",
                             "wall_time_ms": raw["wall_time_ms"],
                             "throughput_ops_s": 200 * 1000 / raw["wall_time_ms"],
-                            "started_at": started,
-                            "finished_at": datetime.now(UTC).isoformat(),
+                            "started_at": started.isoformat(),
+                            # Monotonic elapsed time; the wall clock can step backward.
+                            "finished_at": (
+                                started + timedelta(seconds=time.monotonic() - clock)
+                            ).isoformat(),
                         }
                     )
             rows = [t for t in result["trials"] if t["batch"] == batch]
@@ -99,4 +102,6 @@ def run_ablation(
     except (TimeoutError, OSError, RuntimeError, ValueError, KeyError, TypeError) as error:
         result["status"] = "failed"
         result["error"] = type(error).__name__ + ": " + str(error)[:200]
+        if isinstance(error, ChildRunError):
+            result["child"] = {**error.summary(), "stderr_tail": error.stderr_tail}
     return result

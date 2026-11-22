@@ -297,9 +297,18 @@ python scripts/critic_replay.py --trace artifacts/traces/baseline.capture/trace.
   --batch artifacts/experiments/batch-2/result.json --out artifacts/reassessment.json
 ```
 
-If a response is cut short, `AGENT_RESPONSE_TRUNCATED` stops the run without executing partial
-tool calls. Adjust `META_MAX_COMPLETION_TOKENS` or `META_REASONING_EFFORT` before retrying;
-reasoning and visible output share the completion-token budget.
+If a response is cut short, its partial tool calls are never executed. While reserved responses
+remain, the controller discards it and asks for a shorter reply; a decision that is not valid
+JSON for the schema, fails the investigation checks or cites ungrounded numbers likewise gets its
+error codes back once per remaining response. This also applies after tools are withdrawn (the
+repair stays tool-less). Both spend an already reserved response, so budgets are unchanged. When
+no response remains, the error stops the run (`AGENT_RESPONSE_TRUNCATED`,
+`AGENT_DECISION_INVALID`, `AGENT_INVESTIGATION_INVALID`, `AGENT_NUMERIC_GROUNDING_INVALID`).
+Adjust `META_MAX_COMPLETION_TOKENS` or `META_REASONING_EFFORT` if truncation recurs; reasoning and
+visible output share the completion-token budget. `META_REQUEST_TIMEOUT_S` (default 120) bounds
+each provider request. A request that times out, cannot connect or gets an HTTP 5xx reply is sent
+again at most twice per run, each time as a new reserved request within the same limits; other
+provider errors stop the run. Errors report the class and HTTP status, never the provider body.
 `META_MAX_TOTAL_COMPLETION_TOKENS` limits cumulative reserved output capacity, while
 `META_MAX_REQUEST_BYTES` and `META_MAX_SESSION_REQUEST_BYTES` bound serialized input per request
 and session. The controller reserves the full per-response output limit before each call,
@@ -376,7 +385,17 @@ An improvement in one environment is not a guarantee for a different application
 - **Measurements:** timing summaries computed from the supplied trace and observation window.
   GPU idle fraction refers to captured activity for that workload and device.
 - **Candidate explanations:** interpretations of the evidence, with confidence labels and
-  missing-data notes. A candidate is not a confirmed cause.
+  missing-data notes. A candidate is not a confirmed cause. `Ranking rule` (`ranking_rule`
+  in JSON) names the rule that ordered them:
+  - `rules_v4` ranks the removal estimates. Each candidate shows the estimated share of the
+    window its removal would recover, plus a throughput prediction you can test.
+  - `rules_v1_fallback:<reason>` keeps the earlier symptom rule. This happens when runnable
+    CPU intervals overlap GPU gaps, when removal estimates are unavailable (as in the bundled
+    examples), or when estimates tie.
+- **Agent ranking:** in Meta mode, the agent's own ranked hypotheses and evidence appear under
+  `agent`, next to the rules ranking. Mock mode shows a scripted agent instead. On test set 6
+  the Meta agent was not more accurate than rules v4, so it is most useful for its cited
+  evidence and suggested experiments.
 - **Agent decisions:** verified decisions about the recorded affinity throughput effect.
   `inconclusive` means the evidence does not meet the verification policy. Hypotheses remain
   candidate explanations; no decision establishes CPU scheduling as the sole cause.
@@ -405,3 +424,73 @@ gpu-os-copilot --help
 gpu-os-copilot diagnose --help
 gpu-os-copilot experiment --help
 ```
+
+## Accuracy on held-out workloads
+
+Each Meta agent version was frozen before its test workloads were recorded. Test workloads are
+random mixes of periodic synchronization, launch bursts and host-device copies in the bundled
+CUDA pattern benchmark; later sets use matrix sizes absent from development. Labels come from
+hidden ablations: the benchmark is re-run with one factor removed at a time, and the categories
+whose removal recovers the most time are accepted. A diagnosis is correct when its first-ranked
+candidate is accepted; a failed agent session counts as wrong. Each method ran once per workload.
+
+| Test set (date) | Scored | Rules v1 | Tuned rules | Agent | Agent vs tuned rules: wins/losses (p) |
+| --- | --- | --- | --- | --- | --- |
+| 1 (2026-11-01) | 19 | 10 | 18 | 18 | 1/1 (1.0) |
+| 2 (2026-11-02) | 44 | 32 | 39 | 31 | 0/8 (0.008) |
+| 3 (2026-11-02) | 133 | 94 | 118 | 125 | 10/3 (0.09) |
+| 4 (2026-11-04) | 142 | 107 | 124 | 131 | 13/6 (0.17) |
+| 5 (2026-11-05) | 139 | 93 | 113 | 133 | 21/1 (0.00001) |
+| 6 (2026-11-22) | 143 | 115 | 127 | 139 | 14/2 (0.004)* |
+
+"Rules v1" was `--mode rules` through set 6; rules mode now ranks with rules v4 (below).
+"Tuned rules" is a stronger rule set used only for evaluation;
+"Agent" is the version frozen for that set. P-values are exact two-sided sign tests on the
+workloads where the two methods disagree. Set 1 also contains 11 single-factor workloads that
+resemble development cases. *Set 6 was preregistered against a different comparator (below);
+its tuned-rules comparison is descriptive.
+
+- The agent beat rules v1 on sets 1 and 3-6 (8/0, 35/4, 28/4, 40/0 and 28/4 wins/losses;
+  p < 0.01).
+- Among preregistered comparisons, only the set-5 version significantly outperformed the
+  tuned rules. Sets 1, 3 and 4 showed no significant difference, and the set-2 version lost
+  to them and was revised. Set 6's 14/2 is descriptive. Each set tests
+  one agent version once; p-values are not adjusted across sets.
+- A fixed ranking of the report's `removal_estimate_*` metrics and `kernel_only_busy_fraction`
+  scored 127/133, 135/142 and 132/139 on sets 3-5, about as well as the agent (set 5: 1
+  win, 0 losses for the agent). The agent reads these estimates; the model has not been
+  shown to add accuracy beyond them.
+- A session fails when a provider request times out or errors, and counts as a wrong answer.
+  The set-4 agent failed 6 of 142, mostly at its 30-second request timeout. The set-5 agent
+  waits up to 120 seconds and failed none of 139; 18 of its responses took over 30 seconds.
+  The set-6 agent failed 2 of 143: both used all six requests without returning a valid
+  answer.
+- Set 6 tested whether the agent gains from running experiments itself. The set-6 agent may
+  run up to two removal experiments per workload. Each experiment is a separate 5-pair
+  benchmark with one factor removed, and its measured share replaces the estimate. It scored
+  139/143 and used 163 experiments.
+- Two fixed rules ran on the same recorded experiments. Experiment counts cover the 141
+  workloads where the agent session completed:
+
+  | Method | Correct | Experiments |
+  | --- | --- | --- |
+  | Measure the two largest estimates (preregistered primary comparator) | 138/143 | 282 |
+  | Measure the second only when it could overtake | 139/143 | 162 |
+  | Estimates alone, no experiment | 140/143 | 0 |
+
+  - Primary result: the agent did not differ significantly from the top-two rule (2 wins,
+    1 loss, p = 1.0). It used fewer experiments than that rule, but no fewer than the
+    adaptive rule (8 fewer, 10 more, p = 0.81).
+  - Experiments did not improve accuracy. A single 5-pair batch misled every
+    experiment-based method on some workloads. Two of the agent's four misses were failed
+    sessions with an invalid final answer.
+- The estimates-alone rule is rules v4 (`analysis/rule_baseline_v4.py`). It ranks
+  `gpu_compute` first when kernels are busy at least half the window and no single removal
+  would recover half of it, which matches the label definition. It scored 140/143 against
+  135/143 for the earlier fixed ranking (5 wins, 0 losses, p = 0.06, not significant). It was
+  written from set-5 errors and tested once on set 6.
+- `--mode rules` now uses rules v4. Its first candidate matched the evaluated rule on all 300
+  set-5 and set-6 traces. Where rules v4 cannot rank, rules mode keeps the rules-v1 result
+  (see Read the results).
+- All sets were recorded on one WSL2 host with one GPU, using synthetic benchmark workloads
+  and three bottleneck factors. Results may differ for other applications and hosts.

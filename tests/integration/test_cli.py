@@ -17,6 +17,8 @@ def test_json_cli(capsys):
     assert main(["demo-fixture", "--json"]) == 0
     data = json.loads(capsys.readouterr().out)
     assert data["summary"]["provenance"]["source"] == "fixture"
+    assert data["ranking_rule"] == "rules_v1_fallback:cpu_scheduling_candidate"
+    assert data["hypotheses"][0]["category"] == "cpu_scheduling"
 
 
 def test_meta_requires_explicit_paid_opt_in(capsys):

@@ -38,6 +38,10 @@ class NoWorker:
         raise AssertionError("Recorded evaluation cannot execute hardware")
 
 
+# Offered only by a version whose source implements it; hashed per method, not in common.
+VERSION_TOOLS = frozenset({"run_removal_experiment"})
+
+
 class ReplayExecutor:
     owner_approved = False
 
@@ -69,6 +73,20 @@ class ReplayExecutor:
             reference = self.trace.model_copy(update={"workload_id": "launch_test"})
             self.scheduler = ToolExecutor(
                 NoWorker(), reference, scheduling_study=load_scheduling_study(path, reference)
+            )
+        self.removal = None
+        try:
+            from gpu_os_copilot.agent.removal import RemovalExperiments
+        except ImportError:  # Archived agent versions predate the tool and run without it.
+            RemovalExperiments = None
+        if "removal_experiments" in case and RemovalExperiments is not None:
+            if not self.runtime_evidence:
+                raise ValueError("Removal replay requires runtime evidence")
+            recorded = copy.deepcopy(case["removal_experiments"])
+            self.removal = RemovalExperiments(
+                recorded,
+                recorded.__getitem__,
+                execution="recorded replay of a separate bounded run; no new execution",
             )
         if not 2 <= len(self.results) <= 3:
             raise ValueError("Two or three recorded batches required")
@@ -118,7 +136,13 @@ class ReplayExecutor:
         return result
 
     def additional_metrics(self):
-        return self.scheduler.additional_metrics() if self.scheduler else {}
+        metrics = self.scheduler.additional_metrics() if self.scheduler else {}
+        if self.removal:
+            metrics.update(self.removal.metrics())
+        return metrics
+
+    def removal_report(self):
+        return self.removal.report() if self.removal else None
 
     def scheduling_evidence(self):
         return self.scheduler.scheduling_evidence() if self.scheduler else None
@@ -187,7 +211,13 @@ class ReplayExecutor:
                 for tool in self.scheduler.tool_schemas()
                 if tool["function"]["name"] == READ_TOOL
             ]
+        if self.removal:
+            schemas.append(self.removal.tool_schema())
         return schemas
+
+    def common_tool_schemas(self):
+        """Tools every compared version must receive identically (version-specific excluded)."""
+        return [t for t in self.tool_schemas() if t["function"]["name"] not in VERSION_TOOLS]
 
     def execute(self, name, arguments):
         if self.scheduler and name == "read_profiled_scheduler_comparisons":
@@ -195,6 +225,8 @@ class ReplayExecutor:
             if "result" in response:
                 self.scheduler_reads.append(name)
             return response
+        if self.removal and name == "run_removal_experiment":
+            return self.removal.execute(arguments)
         try:
             if len(arguments) > 8192:
                 raise ValueError("Arguments too large")

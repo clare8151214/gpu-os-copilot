@@ -18,6 +18,8 @@ class AgentConfig(Model):
     max_request_bytes: Annotated[int, Field(strict=True, ge=1024, le=1048576)] = 131072
     max_session_request_bytes: Annotated[int, Field(strict=True, ge=1024, le=10485760)] = 524288
     reasoning_effort: Literal["minimal", "low", "medium", "high"] = "medium"
+    # Per provider request; slow responses reached 29 s on 2026-11-04, so 30 s was too tight.
+    request_timeout_s: Annotated[int, Field(strict=True, ge=10, le=300)] = 120
     dry_run: bool = True
 
     @model_validator(mode="after")
@@ -45,6 +47,7 @@ class AgentConfig(Model):
             max_request_bytes=int(os.getenv("META_MAX_REQUEST_BYTES", "131072")),
             max_session_request_bytes=int(os.getenv("META_MAX_SESSION_REQUEST_BYTES", "524288")),
             reasoning_effort=os.getenv("META_REASONING_EFFORT", "medium"),
+            request_timeout_s=int(os.getenv("META_REQUEST_TIMEOUT_S", "120")),
             dry_run=os.getenv("DRY_RUN", "1") != "0",
         )
 

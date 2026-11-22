@@ -1,5 +1,6 @@
 """Interval unions across streams; missing telemetry never becomes a measurement."""
 
+from bisect import bisect_left
 from statistics import median
 
 from gpu_os_copilot.analysis.api_classes import API_CLASSES, classify_api, normalize_api_name
@@ -36,6 +37,178 @@ def intersection(left: list[tuple[int, int]], right: list[tuple[int, int]]) -> i
         else:
             j += 1
     return total
+
+
+SUBMITTING_OR_SYNC = frozenset({"launch", "memcpy", "memset", "sync"})
+
+
+def host_call_order(trace: TraceBundle) -> dict | None:
+    """Top-level CUDA calls per thread in host order; None if any API name is unknown.
+
+    Runtime calls nest driver calls, so each correlated call maps to its top-level call, kept
+    as (start, end, name, class). For each top-level call, next_class is the class of the next
+    top-level call on the thread that submits GPU work or synchronizes.
+    """
+    threads: dict[tuple, list[tuple[int, int, str, str]]] = {}
+    current_end: dict[tuple, int] = {}
+    position: dict[tuple, tuple] = {}
+    for e in sorted((e for e in trace.events if e.kind == "cuda_api"), key=lambda e: e.start_ns):
+        name = normalize_api_name(e.attributes.get("api_name"))
+        if name is None:
+            return None
+        thread = (e.pid, e.tid)
+        calls = threads.setdefault(thread, [])
+        if e.end_ns > current_end.get(thread, -1):
+            current_end[thread] = e.end_ns
+            calls.append((e.start_ns, e.end_ns, name, classify_api(name)))
+        if e.correlation_id is not None:
+            position[(e.pid, e.correlation_id)] = (thread, len(calls) - 1)
+    next_class = {}
+    for thread, calls in threads.items():
+        following, upcoming = [None] * len(calls), None
+        for index in range(len(calls) - 1, -1, -1):
+            following[index] = upcoming
+            if calls[index][3] in SUBMITTING_OR_SYNC:
+                upcoming = calls[index][3]
+        next_class[thread] = following
+    return {
+        "calls": threads,
+        "position": position,
+        "next_class": next_class,
+        "sync_starts": {
+            thread: [start for start, _, _, kind in calls if kind == "sync"]
+            for thread, calls in threads.items()
+        },
+    }
+
+
+HOST_COST_QUANTILE = 0.25
+REMOVABLE = ("synchronization", "data_transfer", "launch_overhead")
+
+
+def host_submission_ns(order: dict, start: int, end: int) -> dict[str, int]:
+    """Longest per-thread host submission time in the window, as is and after each removal.
+
+    Async calls block while the device queue is full, so a call costs the lower quartile of
+    its API's durations in the window; host time between calls is kept. Synchronize calls cost
+    nothing here because their waits are device time. Removing a factor drops its calls with
+    the host time leading to each; cheaper submission keeps one launch per back-to-back run of
+    launches. Host clock only.
+    """
+    inside = {
+        thread: [
+            (index, call) for index, call in enumerate(calls) if start <= call[0] and call[1] <= end
+        ]
+        for thread, calls in order["calls"].items()
+    }
+    durations: dict[str, list[int]] = {}
+    for calls in inside.values():
+        for _, (a, b, name, _) in calls:
+            durations.setdefault(name, []).append(b - a)
+    cost = {name: sorted(v)[int(HOST_COST_QUANTILE * len(v))] for name, v in durations.items()}
+
+    def longest(drop=lambda kind, following: False, batch=False):
+        result = 0
+        for thread, calls in inside.items():
+            following, busy, previous = order["next_class"][thread], 0, None
+            for index, (a, b, name, kind) in calls:
+                gap = 0 if previous is None else max(0, a - previous[1])
+                repeated = (
+                    batch and kind == "launch" and previous is not None and previous[3] == "launch"
+                )
+                previous = (a, b, name, kind)
+                if not (repeated or drop(kind, following[index])):
+                    busy += gap + (0 if kind == "sync" else cost[name])
+            result = max(result, busy)
+        return result
+
+    return {
+        "base": longest(),
+        "synchronization": longest(
+            lambda kind, following: (
+                kind == "sync" or (kind in {"memcpy", "memset"} and following == "sync")
+            )
+        ),
+        "data_transfer": longest(
+            lambda kind, following: kind in {"memcpy", "memset"} and following != "sync"
+        ),
+        "launch_overhead": longest(batch=True),
+    }
+
+
+def removal_estimates(trace: TraceBundle, gpu, interval) -> dict | None:
+    """Partition GPU-device window time by the factor whose removal would first recover it.
+
+    Busy time: kernels alone, kernel/transfer overlap, and exposed transfers (memcpy or
+    memset with no kernel running). A transfer the host waits on before submitting more work
+    is part of a synchronize round trip. Interior idle gaps go to the work that ends them:
+    behind a synchronize when the next work's submitting thread entered one after the previous
+    work was submitted, otherwise to the next work's kind. Gaps before the first or after the
+    last work stay unattributed. Correlation IDs link work to calls; host order uses host
+    timestamps only and lengths the GPU clock only. None when any work is unlinked.
+
+    The recoverable time per factor is its partition time, capped so the window cannot shrink
+    below the host's own submission time after that removal: when the host sets the pace,
+    device time freed by removing work stays idle.
+    """
+    order = host_call_order(trace)
+    if order is None:
+        return None
+    position, next_class = order["position"], order["next_class"]
+    if any(e.correlation_id is None or (e.pid, e.correlation_id) not in position for e in gpu):
+        return None
+
+    def awaited(e):
+        thread, index = position[(e.pid, e.correlation_id)]
+        return e.kind != "gpu_kernel" and next_class[thread][index] == "sync"
+
+    def host_start(e):
+        thread, index = position[(e.pid, e.correlation_id)]
+        return thread, order["calls"][thread][index][0]
+
+    kernels = merge_intervals([interval(e) for e in gpu if e.kind == "gpu_kernel"])
+    moves = merge_intervals([interval(e) for e in gpu if e.kind != "gpu_kernel" and not awaited(e)])
+    waits = merge_intervals([interval(e) for e in gpu if awaited(e)])
+    transfers = merge_intervals(moves + waits)
+    parts = {
+        "kernel_only": duration(kernels) - intersection(kernels, transfers),
+        "overlap": intersection(kernels, transfers),
+        "synchronization": duration(waits) - intersection(waits, merge_intervals(kernels + moves)),
+        "data_transfer": duration(moves) - intersection(moves, kernels),
+        "launch_overhead": 0,
+    }
+    runs = []  # Merged busy runs: [start, end, first work, work that ends the run].
+    for e in sorted(gpu, key=lambda e: (e.start_ns, e.end_ns)):
+        a, b = interval(e)
+        if a == b:
+            continue
+        if runs and a <= runs[-1][1]:
+            if b > runs[-1][1]:
+                runs[-1][1], runs[-1][3] = b, e
+        else:
+            runs.append([a, b, e, e])
+    for previous, following in zip(runs, runs[1:], strict=False):
+        _, before = host_start(previous[3])
+        thread, after = host_start(following[2])
+        starts = order["sync_starts"].get(thread, [])
+        index = bisect_left(starts, before)
+        behind = index < len(starts) and starts[index] < after
+        factor = (
+            "synchronization"
+            if behind or awaited(following[2])
+            else "launch_overhead"
+            if following[2].kind == "gpu_kernel"
+            else "data_transfer"
+        )
+        parts[factor] += following[0] - previous[1]
+    window = trace.window
+    span = window.end_ns - window.start_ns
+    host = host_submission_ns(order, window.start_ns, window.end_ns)
+    return {
+        "partition": parts,
+        "recoverable": {f: max(0, min(parts[f], span - host[f])) for f in REMOVABLE},
+        "host_submission": host["base"],
+    }
 
 
 def summarize(trace: TraceBundle) -> MetricSummary:
@@ -83,6 +256,17 @@ def summarize(trace: TraceBundle) -> MetricSummary:
             api_classes[classify_api(name)].append(interval(e))
     elif api:
         missing.append("CUDA API names unavailable for some events; API class time unavailable")
+    removal = removal_estimates(trace, gpu, interval) if reliable_gpu and api_classes else None
+    if reliable_gpu and removal is None:
+        missing.append(
+            "GPU work not fully linked to named CUDA API calls; removal estimates unavailable"
+        )
+    share = {
+        key: value / (end - start) for key, value in (removal or {}).get("partition", {}).items()
+    }
+    recoverable = {
+        key: value / (end - start) for key, value in (removal or {}).get("recoverable", {}).items()
+    }
     timing = correlation_audit(trace)
     if not timing["conditional_timing_eligible"]:
         missing.append(
@@ -184,6 +368,14 @@ def summarize(trace: TraceBundle) -> MetricSummary:
         kernel_busy_fraction=duration(kernel_busy) / (end - start) if reliable_gpu else None,
         kernel_transfer_overlap_ms=intersection(kernel_busy, transfer_busy) / 1e6
         if reliable_gpu
+        else None,
+        removal_estimate_synchronization_fraction=recoverable.get("synchronization"),
+        removal_estimate_data_transfer_fraction=recoverable.get("data_transfer"),
+        removal_estimate_launch_overhead_fraction=recoverable.get("launch_overhead"),
+        kernel_only_busy_fraction=share.get("kernel_only"),
+        unattributed_idle_fraction=max(0.0, 1 - sum(share.values())) if share else None,
+        host_submission_fraction=min(1.0, removal["host_submission"] / (end - start))
+        if removal
         else None,
         cpu_runnable_delay_ms=sum(duration(v) for v in per_thread.values()) / 1e6
         if scheduler_available

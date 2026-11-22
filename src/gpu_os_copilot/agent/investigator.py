@@ -10,6 +10,12 @@ UNITS = {
     "transfer_busy_fraction": "fraction",
     "kernel_busy_fraction": "fraction",
     "kernel_transfer_overlap_ms": "ms",
+    "removal_estimate_synchronization_fraction": "fraction",
+    "removal_estimate_data_transfer_fraction": "fraction",
+    "removal_estimate_launch_overhead_fraction": "fraction",
+    "kernel_only_busy_fraction": "fraction",
+    "unattributed_idle_fraction": "fraction",
+    "host_submission_fraction": "fraction",
     "cuda_api_duration_ms": "ms",
     "cpu_runnable_delay_ms": "ms",
     "sched_idle_overlap_ms": "ms",
@@ -32,6 +38,28 @@ DEFINITIONS = {
     "transfer_busy_fraction": "Window share with at least one memcpy active.",
     "kernel_busy_fraction": "Window share with at least one kernel executing.",
     "kernel_transfer_overlap_ms": "Copy time that runs concurrently with kernels (GPU clock).",
+    "removal_estimate_synchronization_fraction": "First-order window share recoverable by "
+    "removing host synchronizes: GPU idle gaps ended by work submitted after the submitting "
+    "thread entered a synchronize, plus copies the host waits on before submitting more work "
+    "and the idle before them. Host order via correlation IDs; no cross-clock comparison. "
+    "Capped as described under host_submission_fraction.",
+    "removal_estimate_data_transfer_fraction": "First-order window share recoverable by "
+    "removing copies/memsets: their time with no kernel running, plus GPU idle gaps ended by "
+    "their submission (not behind a synchronize); excludes copies the host waits on. Capped "
+    "as described under host_submission_fraction.",
+    "removal_estimate_launch_overhead_fraction": "First-order window share recoverable by "
+    "cheaper kernel submission (one submission per back-to-back run of launches): GPU idle "
+    "gaps ended by a kernel, not behind a synchronize. Capped as described under "
+    "host_submission_fraction.",
+    "kernel_only_busy_fraction": "Window share with kernels running and no copy or memset; "
+    "only faster kernels shrink it. Same scale as the removal estimates.",
+    "unattributed_idle_fraction": "GPU idle before the first or after the last work in the "
+    "window (device timeline).",
+    "host_submission_fraction": "Window share the submitting thread needs for its own work: "
+    "the typical (lower-quartile) cost of each CUDA call plus host time between calls, "
+    "excluding synchronize waits. Each removal estimate is capped so the window cannot shrink "
+    "below this time recomputed without that factor: when the host sets the pace, removing "
+    "device work frees GPU time that stays idle. Host clock only.",
     "cuda_api_duration_ms": "Sum of host CUDA API call durations.",
     "cpu_runnable_delay_ms": "Time launch threads were runnable but not running.",
     "sched_idle_overlap_ms": "Runnable-wait time coinciding with GPU idle (verified clocks).",
@@ -41,7 +69,8 @@ DEFINITIONS = {
     "kernel_median_ms": "Median kernel duration.",
     "kernel_total_ms": "Sum of kernel durations.",
     "cuda_launch_api_ms": "Host time inside top-level kernel/graph launch calls (union).",
-    "cuda_sync_api_ms": "Host time blocked in explicit device/stream/event synchronize calls.",
+    "cuda_sync_api_ms": "Host time blocked in explicit device/stream/event synchronize calls; "
+    "the GPU may be executing work during that time.",
     "cuda_memcpy_api_ms": "Host time inside top-level memcpy calls (union).",
     "cuda_launch_call_count": "Top-level kernel/graph launch calls in the window.",
     "cuda_sync_call_count": "Top-level explicit host synchronize calls in the window.",

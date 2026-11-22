@@ -141,6 +141,10 @@ def validate_result_inputs(result, key, source_method):
     if (
         result["opening_sha256"] != expected
         or result["common_tools_sha256"] != key["common_tools_sha256"]
+        or (
+            "tools_sha256_by_method" in key
+            and result.get("tools_sha256") != key["tools_sha256_by_method"][source_method]
+        )
     ):
         raise ValueError("Method did not receive its frozen evidence/tools")
 
@@ -208,8 +212,9 @@ def main():
             elif method != "rules":
                 command.append("--allow-paid-api")
             try:
+                # Above six requests at the 120 s provider timeout, plus local tool time.
                 process = subprocess.run(
-                    command, env=env, cwd=source, capture_output=True, text=True, timeout=240
+                    command, env=env, cwd=source, capture_output=True, text=True, timeout=900
                 )
                 if process.returncode != 0 or not (destination / "result.json").exists():
                     result = {

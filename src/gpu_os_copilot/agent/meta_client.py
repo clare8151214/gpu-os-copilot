@@ -20,12 +20,19 @@ class MetaClient:
         self.client = OpenAI(
             base_url=config.base_url,
             api_key=key,
-            timeout=30,
+            timeout=config.request_timeout_s,
             max_retries=0,
         )
 
     def complete(self, messages: list[dict], tools: list[dict]) -> dict:
-        from openai import APIError, AuthenticationError, RateLimitError
+        from openai import (
+            APIConnectionError,
+            APIError,
+            APIStatusError,
+            APITimeoutError,
+            AuthenticationError,
+            RateLimitError,
+        )
 
         try:
             response = self.client.chat.completions.create(
@@ -41,6 +48,16 @@ class MetaClient:
             ) from None
         except RateLimitError:
             raise CopilotError("META_QUOTA_OR_RATE_LIMIT: no fallback provider was used") from None
+        # Transient classes (see TRANSIENT_PROVIDER_ERRORS) carry no provider body.
+        except APITimeoutError:
+            raise CopilotError("META_API_TIMEOUT: no response within the request timeout") from None
+        except APIConnectionError:
+            raise CopilotError("META_API_CONNECTION_FAILED: provider body suppressed") from None
+        except APIStatusError as error:
+            code = "META_API_SERVER_ERROR" if error.status_code >= 500 else "META_API_FAILED"
+            raise CopilotError(
+                f"{code}: HTTP {error.status_code}; provider body suppressed"
+            ) from None
         except APIError:
             raise CopilotError(
                 "META_API_FAILED: request failed; provider body suppressed"

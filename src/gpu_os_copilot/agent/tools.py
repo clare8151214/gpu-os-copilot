@@ -3,6 +3,9 @@ from uuid import uuid4
 
 from pydantic import Field, ValidationError
 
+from gpu_os_copilot.agent.removal import FACTOR_CATEGORY, RemovalExperiments
+from gpu_os_copilot.agent.removal import TOOL as REMOVAL_TOOL
+from gpu_os_copilot.analysis.ablation_labels import FAMILY_CATEGORY
 from gpu_os_copilot.analysis.metrics import summarize
 from gpu_os_copilot.analysis.scheduling_study import READ_TOOL, SchedulingStudy
 from gpu_os_copilot.experiments.compare import compare_trials
@@ -13,9 +16,11 @@ from gpu_os_copilot.schemas import (
     Model,
     NonNegativeInt,
     Provenance,
+    RemovalRequest,
     TraceBundle,
 )
 from gpu_os_copilot.worker.protocol import Worker
+from gpu_os_copilot.workloads.patterns import PATTERN_VARIANTS, mixed_factors
 from gpu_os_copilot.workloads.specs import SCENARIO_SHAPES, expected_configuration
 
 
@@ -88,6 +93,49 @@ class ToolExecutor:
             raise ValueError("Scheduling study does not match the diagnosis input")
         self.scheduling_study = scheduling_study
         self.scheduling_read = False
+        self.removal = self._removal_experiments()
+
+    def removable_factors(self) -> dict:
+        """Designed factors of the trace's pattern workload by category; empty otherwise."""
+        scenario = self.trace.configuration.get("scenario")
+        if scenario not in PATTERN_VARIANTS:
+            return {}
+        family, params = PATTERN_VARIANTS[scenario]
+        if family == "mixed":
+            return {FACTOR_CATEGORY[factor]: factor for factor in mixed_factors(params)}
+        return {FAMILY_CATEGORY[family]: None} if family in FAMILY_CATEGORY else {}
+
+    def _removal_experiments(self):
+        """Offered only for an approved, bound pattern workload on matching hardware."""
+        if not self.owner_approved or not self.workload_bound():
+            return None
+        factors = self.removable_factors()
+        if not factors or not self.local_configuration_matches():
+            return None
+        cpu = min(self.worker.capabilities().cpu_affinity)
+        scenario = self.trace.configuration["scenario"]
+
+        def run(category):
+            return self.worker.run_removal(
+                RemovalRequest(
+                    experiment_id=f"removal-{uuid4().hex[:16]}",
+                    scenario=scenario,
+                    factor=factors[category],
+                    cpu=cpu,
+                    timeout_s=120,
+                    owner_approved=True,
+                    provenance=Provenance(
+                        source="benchmark",
+                        confidence="derived",
+                        description="Agent-selected bounded removal batch",
+                    ),
+                )
+            )
+
+        return RemovalExperiments(factors, run, execution="new project child processes")
+
+    def removal_report(self):
+        return self.removal.report() if self.removal else None
 
     def tool_schemas(self):
         schemas = tool_schemas()
@@ -104,14 +152,19 @@ class ToolExecutor:
                     },
                 }
             )
+        if self.removal:
+            schemas.append(self.removal.tool_schema())
         return schemas
 
     def additional_metrics(self):
-        return (
+        metrics = (
             self.scheduling_study.metrics(consumed=self.scheduling_read)
             if self.scheduling_study
             else {}
         )
+        if self.removal:
+            metrics.update(self.removal.metrics())
+        return metrics
 
     def scheduling_evidence(self):
         if self.scheduling_study is None:
@@ -155,6 +208,11 @@ class ToolExecutor:
         )
 
     def execute(self, name: str, arguments: str) -> dict:
+        if name == REMOVAL_TOOL and self.removal is not None:
+            try:
+                return self.removal.execute(arguments)
+            except (OSError, RuntimeError, ValueError):
+                return {"schema_version": "1.0", "error_code": "WORKER_FAILED"}
         if name == READ_TOOL and self.scheduling_study is not None:
             try:
                 if len(arguments) > 8192:

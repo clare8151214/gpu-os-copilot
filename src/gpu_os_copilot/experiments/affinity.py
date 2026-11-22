@@ -7,12 +7,36 @@ import subprocess
 import sys
 import tempfile
 import time
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
+
+from pydantic import ValidationError
 
 from gpu_os_copilot.experiments.compare import compare_trials
 from gpu_os_copilot.schemas import BenchmarkTrial, ExperimentRequest, ExperimentResult, Provenance
 from gpu_os_copilot.workloads.specs import MODEL_SCENARIOS, expected_configuration
+
+STDERR_TAIL_BYTES = 4096
+
+
+class ChildRunError(RuntimeError):
+    """A benchmark child failed; keeps its exit status and a bounded stderr tail."""
+
+    def __init__(self, message: str, returncode: int | None, stderr: bytes):
+        super().__init__(message)
+        self.returncode = returncode
+        self.stderr_bytes = len(stderr)
+        self.stderr_tail = stderr[-STDERR_TAIL_BYTES:].decode("utf-8", "replace")
+
+    def summary(self) -> dict:
+        """Model-safe facts; the stderr text itself stays in a local diagnostics file."""
+        return {
+            "exit_code": self.returncode,
+            "signal": signal.Signals(-self.returncode).name
+            if self.returncode is not None and -self.returncode in signal.valid_signals()
+            else None,
+            "stderr_bytes": self.stderr_bytes,
+        }
 
 
 def _invoke(argv: list[str], timeout: float, max_output: int) -> dict:
@@ -33,15 +57,18 @@ def _invoke(argv: list[str], timeout: float, max_output: int) -> dict:
         )
         try:
             process.wait(timeout=timeout)
-            if process.returncode != 0:
-                raise RuntimeError("Benchmark child failed")
             output.seek(0)
             raw = output.read(max_output + 1)
             errors.seek(0)
             stderr = errors.read(max_output + 1)
+            if process.returncode != 0:
+                raise ChildRunError("Benchmark child failed", process.returncode, stderr)
             if len(raw) + len(stderr) > max_output:
-                raise RuntimeError("Benchmark output budget exceeded")
-            return json.loads(raw)
+                raise ChildRunError("Benchmark output budget exceeded", 0, stderr)
+            try:
+                return json.loads(raw)
+            except ValueError:
+                raise ChildRunError("Benchmark output is not JSON", 0, stderr) from None
         finally:
             # The process group belongs exclusively to this newly created subprocess.
             try:
@@ -117,7 +144,7 @@ def run_affinity_ab(worker, request: ExperimentRequest) -> ExperimentResult:
                 if remaining <= 0:
                     raise TimeoutError("Total experiment timeout")
                 cpus = [baseline_cpu] if condition == "baseline" else request.candidate_cpu_set
-                started_at = datetime.now(UTC)
+                started_at, started = datetime.now(UTC), time.monotonic()
                 raw = _invoke(
                     [
                         sys.executable,
@@ -137,7 +164,8 @@ def run_affinity_ab(worker, request: ExperimentRequest) -> ExperimentResult:
                     timeout=min(remaining, 15),
                     max_output=request.max_output_bytes,
                 )
-                finished_at = datetime.now(UTC)
+                # The wall clock can step backward (WSL2 time sync); elapsed time is monotonic.
+                finished_at = started_at + timedelta(seconds=time.monotonic() - started)
                 if request.scenario in MODEL_SCENARIOS:
                     if raw.get("validation", {}).get("validated") is not True or any(
                         raw.get("configuration", {}).get(k) != v
@@ -170,9 +198,29 @@ def run_affinity_ab(worker, request: ExperimentRequest) -> ExperimentResult:
     except (TimeoutError, subprocess.TimeoutExpired):
         result.status = "partial" if result.trials else "failed"
         result.error_code = "EXPERIMENT_TIMEOUT"
-    except (OSError, ValueError, RuntimeError, KeyError, TypeError, ZeroDivisionError):
+    except (OSError, ValueError, RuntimeError, KeyError, TypeError, ZeroDivisionError) as error:
         result.status = "partial" if result.trials else "failed"
         result.error_code = "BENCHMARK_FAILED"
+        result.failure = {
+            "error_type": type(error).__name__,
+            "trials_completed": len(result.trials),
+        }
+        if isinstance(error, ValidationError):
+            # Validator messages are fixed text; input values are never included.
+            result.failure["validation_errors"] = [
+                {"type": e["type"], "msg": e["msg"]} for e in error.errors()[:5]
+            ]
+        if isinstance(error, ChildRunError):
+            result.failure.update(error.summary())
+            # Local, owner-only diagnostics: stderr may name host paths, so it is never
+            # returned to tools or the model.
+            try:
+                flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
+                with os.fdopen(os.open(run_dir / "failure.json", flags, 0o600), "w") as file:
+                    json.dump({**result.failure, "stderr_tail": error.stderr_tail}, file, indent=2)
+                result.failure["diagnostics_file"] = "failure.json"
+            except OSError:
+                result.failure["diagnostics_file"] = None
     except KeyboardInterrupt:
         result.status = "partial" if result.trials else "failed"
         result.error_code = "CANCELLED"

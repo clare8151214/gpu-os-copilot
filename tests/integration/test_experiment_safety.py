@@ -1,7 +1,7 @@
 import json
 import subprocess
 import sys
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
@@ -126,10 +126,13 @@ def test_alternating_trials_persistence_and_duplicate_refusal(setup, monkeypatch
     ]
     assert result.status == "ok"
     assert len(calls) == 4
+    # Finish = start + monotonic elapsed, so it can differ from separate wall-clock reads by
+    # clock-read jitter (observed 1 us).
+    jitter = timedelta(milliseconds=1)
     for trial, (child_start, child_finish) in zip(result.trials, child_intervals, strict=True):
-        assert trial.started_at <= child_start <= child_finish <= trial.finished_at
+        assert trial.started_at <= child_start <= child_finish <= trial.finished_at + jitter
     assert all(
-        first.finished_at <= second.started_at
+        first.finished_at <= second.started_at + jitter
         for first, second in zip(result.trials, result.trials[1:], strict=False)
     )
     assert all(argv[1:3] == ["-m", "gpu_os_copilot.workloads.launch_test"] for argv in calls)
@@ -193,3 +196,80 @@ def test_child_warnings_do_not_corrupt_json():
             timeout=2,
             max_output=4096,
         )
+
+
+def test_child_failure_keeps_exit_status_and_local_stderr(setup, monkeypatch):
+    with pytest.raises(RuntimeError, match="child failed") as raised:
+        _invoke(
+            [sys.executable, "-c", "import sys; print('x' * 9000, file=sys.stderr); sys.exit(3)"],
+            timeout=2,
+            max_output=4096,
+        )
+    assert raised.value.summary() == {"exit_code": 3, "signal": None, "stderr_bytes": 4097}
+    assert len(raised.value.stderr_tail) == 4096
+    with pytest.raises(RuntimeError) as killed:
+        _invoke([sys.executable, "-c", "import os; os.kill(os.getpid(), 9)"], 2, 4096)
+    assert killed.value.summary()["signal"] == "SIGKILL"
+    with pytest.raises(RuntimeError, match="not JSON"):
+        _invoke([sys.executable, "-c", "print('partial')"], timeout=2, max_output=4096)
+
+    worker, request = setup
+    request.owner_approved = True
+    raw = {"wall_time_ms": 10, "operation_count": 200, "configuration": {}}
+    calls = iter([raw, killed.value])
+
+    def fail_second(*args, **kwargs):
+        value = next(calls)
+        if isinstance(value, Exception):
+            raise value
+        return value
+
+    monkeypatch.setattr("gpu_os_copilot.experiments.affinity._invoke", fail_second)
+    result = worker.run_experiment(request)
+    assert (result.status, result.error_code) == ("partial", "BENCHMARK_FAILED")
+    assert result.failure == {
+        "error_type": "ChildRunError",
+        "trials_completed": 1,
+        "exit_code": -9,
+        "signal": "SIGKILL",
+        "stderr_bytes": 0,
+        "diagnostics_file": "failure.json",
+    }
+    assert "stderr_tail" not in result.model_dump_json()
+    # Successful results serialize without the field (readable by earlier schema versions).
+    assert "failure" not in result.model_copy(update={"failure": {}}).model_dump(mode="json")
+    local = worker.artifact_dir / "experiments" / request.experiment_id / "failure.json"
+    assert json.loads(local.read_text())["stderr_tail"] == ""
+    assert local.stat().st_mode & 0o777 == 0o600
+
+
+def test_trials_survive_backward_wall_clock_steps_and_keep_validator_messages(setup, monkeypatch):
+    from datetime import UTC, datetime, timedelta
+
+    from gpu_os_copilot.experiments import affinity
+
+    class SteppingClock:
+        """Each reading is one second earlier, like a WSL2 time-sync step during a trial."""
+
+        current = datetime(2026, 11, 2, tzinfo=UTC)
+
+        @classmethod
+        def now(cls, tz=None):
+            cls.current -= timedelta(seconds=1)
+            return cls.current
+
+    worker, request = setup
+    request.owner_approved = True
+    monkeypatch.setattr(affinity, "datetime", SteppingClock)
+    raw = {"wall_time_ms": 10, "operation_count": 200, "configuration": {}}
+    monkeypatch.setattr(affinity, "_invoke", lambda *args, **kwargs: raw)
+    result = worker.run_experiment(request)
+    assert result.status == "ok"
+    assert all(t.finished_at >= t.started_at for t in result.trials)
+
+    monkeypatch.setattr(affinity, "_invoke", lambda *args, **kwargs: {**raw, "wall_time_ms": -7.25})
+    failed = worker.run_experiment(request.model_copy(update={"experiment_id": "exp-invalid"}))
+    assert (failed.status, failed.error_code) == ("failed", "BENCHMARK_FAILED")
+    assert failed.failure["error_type"] == "ValidationError"
+    assert failed.failure["validation_errors"][0]["type"] == "greater_than"
+    assert "7.25" not in json.dumps(failed.failure)  # Messages carry no input values.

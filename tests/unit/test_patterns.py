@@ -13,7 +13,7 @@ from gpu_os_copilot.workloads.specs import SCENARIO_SHAPES, expected_configurati
 
 def test_fixed_table_has_four_variants_per_family_and_is_allowlisted():
     families = [family for family, _ in PATTERN_VARIANTS.values()]
-    expected = {**dict.fromkeys(FAMILIES, 4), "mixed": 8}
+    expected = {**dict.fromkeys(FAMILIES, 4), "mixed": 650}
     assert {name: families.count(name) for name in FAMILIES} == expected
     for name in PATTERN_VARIANTS:
         assert name in SCENARIO_SHAPES
@@ -70,6 +70,17 @@ def test_ablation_rejects_configuration_drift_and_unknown_scenarios(monkeypatch)
         return {"wall_time_ms": 1, "operation_count": 200, "configuration": {"ablated": "?"}}
 
     assert ablation.run_ablation("sync_device_a", 0, invoke=drifted)["status"] == "failed"
+
+    def crashed(argv, timeout, max_output):
+        raise ablation.ChildRunError("Benchmark child failed", 1, b"Traceback: CUDA error")
+
+    failed = ablation.run_ablation("sync_device_a", 0, invoke=crashed)
+    assert failed["child"] == {
+        "exit_code": 1,
+        "signal": None,
+        "stderr_bytes": 21,
+        "stderr_tail": "Traceback: CUDA error",
+    }
     with pytest.raises(ValueError):
         ablation.run_ablation("cpu_contention", 0)
     with pytest.raises(ValueError):
@@ -156,3 +167,107 @@ def test_mixed_label_rule(gains, busy, status, accepted):
     label = ground_truth_mixed(gains, busy)
     assert label["status"] == status
     assert label.get("accepted_top_categories") == accepted
+
+
+REMOVAL_SCHEMA = """
+    CREATE TABLE CUPTI_ACTIVITY_KIND_RUNTIME (start INTEGER, end INTEGER,
+        globalTid INTEGER, correlationId INTEGER, nameId INTEGER);
+    CREATE TABLE CUPTI_ACTIVITY_KIND_KERNEL (start INTEGER, end INTEGER,
+        deviceId INTEGER, streamId INTEGER, globalPid INTEGER, correlationId INTEGER);
+    CREATE TABLE CUPTI_ACTIVITY_KIND_MEMCPY (start INTEGER, end INTEGER,
+        deviceId INTEGER, streamId INTEGER, globalPid INTEGER, correlationId INTEGER);
+    CREATE TABLE StringIds (id INTEGER, value TEXT);
+    INSERT INTO StringIds VALUES (1, 'cudaLaunchKernel_v7000'),
+        (2, 'cudaStreamSynchronize_v3020'), (3, 'cudaMemcpyAsync_v3020');
+"""
+
+
+def test_removal_estimates_partition_the_window_without_cross_clock(tmp_path):
+    path = tmp_path / "removal.sqlite"
+    process = (1 << 48) | (123 << 24)
+    with sqlite3.connect(path) as db:
+        db.executescript(REMOVAL_SCHEMA)
+        # Host clock: kernel A, readback X then wait, kernel B, upload C, kernels D and E.
+        # The GPU clock is offset by +1000 ns; no CPU/GPU timestamp is ever compared.
+        db.executemany(
+            "INSERT INTO CUPTI_ACTIVITY_KIND_RUNTIME VALUES (?, ?, ?, ?, ?)",
+            [
+                (start, start + 10, process | 456, corr, name)
+                for start, corr, name in [
+                    (0, 1, 1),
+                    (20, 2, 3),
+                    (40, 3, 2),
+                    (210, 4, 1),
+                    (230, 5, 3),
+                    (250, 6, 1),
+                    (270, 7, 1),
+                ]
+            ],
+        )
+        db.executemany(
+            "INSERT INTO CUPTI_ACTIVITY_KIND_KERNEL VALUES (?, ?, 0, 7, ?, ?)",
+            [(a, b, process, c) for a, b, c in [(1000, 1100, 1), (1400, 1500, 4)]]
+            + [(a, b, process, c) for a, b, c in [(1600, 1700, 6), (1800, 1850, 7)]],
+        )
+        db.executemany(
+            "INSERT INTO CUPTI_ACTIVITY_KIND_MEMCPY VALUES (?, ?, 0, 8, ?, ?)",
+            [(1150, 1200, process, 2), (1550, 1650, process, 5)],
+        )
+    summary = summarize(import_sqlite(path, start_ns=0, end_ns=2000, capture_complete=True))
+    # Awaited readback: idle before it (50) and its time (50), then 200 idle behind the wait.
+    assert summary.removal_estimate_synchronization_fraction == pytest.approx(300 / 2000)
+    # Upload C: idle before it (50) plus its time with no kernel running (50).
+    assert summary.removal_estimate_data_transfer_fraction == pytest.approx(100 / 2000)
+    assert summary.removal_estimate_launch_overhead_fraction == pytest.approx(100 / 2000)
+    assert summary.kernel_only_busy_fraction == pytest.approx(300 / 2000)
+    # 1000 ns before the first and 150 ns after the last work; overlap is the other 50 ns.
+    assert summary.unattributed_idle_fraction == pytest.approx(1150 / 2000)
+    # Host gaps (210 ns) plus six 10 ns calls; the synchronize wait costs nothing. No cap binds.
+    assert summary.host_submission_fraction == pytest.approx(270 / 2000)
+
+    with sqlite3.connect(path) as db:
+        db.execute("UPDATE CUPTI_ACTIVITY_KIND_KERNEL SET correlationId = 99 WHERE start = 1800")
+    unlinked = summarize(import_sqlite(path, start_ns=0, end_ns=2000, capture_complete=True))
+    assert unlinked.removal_estimate_data_transfer_fraction is None
+    assert unlinked.kernel_only_busy_fraction is None
+    assert any("removal estimates unavailable" in text for text in unlinked.missing_data)
+
+
+def test_removal_estimates_are_capped_by_host_submission_time(tmp_path):
+    path = tmp_path / "host-paced.sqlite"
+    process = (1 << 48) | (123 << 24)
+    with sqlite3.connect(path) as db:
+        db.executescript(REMOVAL_SCHEMA)
+        # Host clock: one upload, then four launches 400 ns apart (390 ns of host work before
+        # each). The host needs 1610 ns of the 2000 ns window.
+        db.executemany(
+            "INSERT INTO CUPTI_ACTIVITY_KIND_RUNTIME VALUES (?, ?, ?, ?, ?)",
+            [
+                (start, start + 10, process | 456, corr, name)
+                for start, corr, name in [
+                    (0, 1, 3),
+                    (400, 2, 1),
+                    (800, 3, 1),
+                    (1200, 4, 1),
+                    (1600, 5, 1),
+                ]
+            ],
+        )
+        db.execute(
+            "INSERT INTO CUPTI_ACTIVITY_KIND_MEMCPY VALUES (100, 900, 0, 8, ?, 1)", (process,)
+        )
+        db.executemany(
+            "INSERT INTO CUPTI_ACTIVITY_KIND_KERNEL VALUES (?, ?, 0, 7, ?, ?)",
+            [(a, a + 50, process, c) for a, c in [(920, 2), (1100, 3), (1300, 4), (1500, 5)]],
+        )
+    summary = summarize(import_sqlite(path, start_ns=0, end_ns=2000, capture_complete=True))
+    # The device timeline credits 800 ns to the upload, but without it the host still needs
+    # 1600 ns, so at most 400 ns can be recovered; launch gaps (20 + 130 + 150 + 150) stay below
+    # their cap (one launch per run: 410 ns of host work). The ranking flips to launch.
+    assert summary.removal_estimate_data_transfer_fraction == pytest.approx(400 / 2000)
+    assert summary.removal_estimate_launch_overhead_fraction == pytest.approx(450 / 2000)
+    assert summary.removal_estimate_synchronization_fraction == 0
+    assert summary.host_submission_fraction == pytest.approx(1610 / 2000)
+    assert summary.kernel_only_busy_fraction == pytest.approx(200 / 2000)
+    # Device-timeline edges only: 100 ns before the upload and 450 ns after the last kernel.
+    assert summary.unattributed_idle_fraction == pytest.approx(550 / 2000)
